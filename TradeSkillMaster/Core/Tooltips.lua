@@ -102,6 +102,11 @@ end
 
 local loadTooltipOptionsTab
 function TSM:LoadTooltipOptions(parent)
+	-- Clean up embedded Analytics dashboard if it exists
+	if TSM.Dashboard and TSM.Dashboard.HideEmbedded then
+		TSM.Dashboard.HideEmbedded()
+	end
+	
 	local tabs = {}
 	local next = next
 

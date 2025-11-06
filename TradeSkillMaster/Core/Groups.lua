@@ -812,6 +812,11 @@ end
 -- operation options
 
 function TSM:LoadOperationOptions(parent)
+	-- Clean up embedded Analytics dashboard if it exists
+	if TSM.Dashboard and TSM.Dashboard.HideEmbedded then
+		TSM.Dashboard.HideEmbedded()
+	end
+	
 	local tabs = {}
 	local next = next
 
@@ -877,6 +882,11 @@ end
 
 local treeGroup
 function TSM:LoadGroupOptions(parent)
+	-- Clean up embedded Analytics dashboard if it exists
+	if TSM.Dashboard and TSM.Dashboard.HideEmbedded then
+		TSM.Dashboard.HideEmbedded()
+	end
+	
 	treeGroup = AceGUI:Create("TSMTreeGroup")
 	treeGroup:SetLayout("Fill")
 	treeGroup:SetCallback("OnGroupSelected", function(...) private:SelectTree(...) end)

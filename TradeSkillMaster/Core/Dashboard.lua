@@ -70,20 +70,46 @@ function Dashboard.Show()
 end
 
 function Dashboard.ShowEmbedded(parentFrame)
-	-- Clean up any existing embedded dashboard first
-	Dashboard.HideEmbedded()
-	
 	-- Create embedded dashboard that fits in TSM options
+	-- Note: Cleanup is handled by Options.lua when switching away from Analytics tab
 	private.CreateEmbeddedDashboard(parentFrame)
 end
 
 function Dashboard.HideEmbedded()
 	-- Clean up embedded dashboard
 	if private.embeddedFrame then
+		-- Release the graph widget first
 		if private.embeddedFrame.graph then
 			private.embeddedFrame.graph:Release()
 			private.embeddedFrame.graph = nil
 		end
+		
+		-- Get all child frames and destroy them
+		local children = { private.embeddedFrame:GetChildren() }
+		for _, child in ipairs(children) do
+			if child.Release then
+				child:Release() -- AceGUI widget
+			else
+				child:Hide()
+				child:SetParent(nil)
+			end
+		end
+		
+		-- Get all child regions (textures, font strings)
+		local regions = { private.embeddedFrame:GetRegions() }
+		for _, region in ipairs(regions) do
+			if region.SetTexture then
+				region:SetTexture(nil)
+			end
+			region:Hide()
+		end
+		
+		-- Clear mainFrame reference if it was pointing to embedded frame
+		if private.mainFrame == private.embeddedFrame then
+			private.mainFrame = nil
+		end
+		
+		-- Finally destroy the main frame
 		private.embeddedFrame:Hide()
 		private.embeddedFrame:SetParent(nil)
 		private.embeddedFrame = nil
@@ -92,6 +118,7 @@ function Dashboard.HideEmbedded()
 	-- Clean up character menu if open
 	if private.characterMenu then
 		private.characterMenu:Hide()
+		private.characterMenu:SetParent(nil)
 		private.characterMenu = nil
 	end
 end
@@ -921,6 +948,7 @@ function private.CreateEmbeddedDashboard(parentFrame)
 	controlsFrame:SetPoint("TOPLEFT", 10, -40)
 	controlsFrame:SetPoint("TOPRIGHT", -10, -40)
 	controlsFrame:SetHeight(30)
+	controlsFrame:Show()
 	
 	-- Time range buttons
 	private.CreateTimeRangeButtons(controlsFrame)
@@ -940,12 +968,14 @@ function private.CreateEmbeddedDashboard(parentFrame)
 	graphFrame:SetPoint("TOPLEFT", 10, -80)
 	graphFrame:SetPoint("TOPRIGHT", -10, -80)
 	graphFrame:SetHeight(250)
+	graphFrame:Show()
 	
 	-- Create graph
 	local AceGUI = LibStub("AceGUI-3.0")
 	local graph = AceGUI:Create("TSMGraph")
 	graph.frame:SetParent(graphFrame)
 	graph.frame:SetAllPoints()
+	graph.frame:Show()
 	frame.graph = graph
 	
 	-- Stats frame
@@ -953,6 +983,7 @@ function private.CreateEmbeddedDashboard(parentFrame)
 	statsFrame:SetPoint("TOPLEFT", 10, -340)
 	statsFrame:SetPoint("TOPRIGHT", -10, -340)
 	statsFrame:SetHeight(private.accountingAvailable and 80 or 40)
+	statsFrame:Show()
 	
 	local statsBg = statsFrame:CreateTexture(nil, "BACKGROUND")
 	statsBg:SetAllPoints()
@@ -966,6 +997,7 @@ function private.CreateEmbeddedDashboard(parentFrame)
 		local detailsFrame = CreateFrame("Frame", nil, frame)
 		detailsFrame:SetPoint("TOPLEFT", 10, -430)
 		detailsFrame:SetPoint("BOTTOMRIGHT", -10, 10)
+		detailsFrame:Show()
 		
 		local detailsBg = detailsFrame:CreateTexture(nil, "BACKGROUND")
 		detailsBg:SetAllPoints()
@@ -985,14 +1017,25 @@ function private.CreateEmbeddedDashboard(parentFrame)
 	private.embeddedFrame = frame
 	private.mainFrame = frame -- So character selector works
 	
+	-- Explicitly show the frame
+	frame:Show()
+	
 	-- Get character list
 	wipe(private.characterGuilds)
 	TSM.GoldTracker.GetCharacterGuilds(private.characterGuilds)
 	private.UpdateCharacterDropdownText()
 	
+	-- Refresh when frame becomes visible (handles tab switching)
+	frame:SetScript("OnShow", function(self)
+		if self == private.embeddedFrame then
+			private.RefreshEmbeddedDashboard()
+		end
+	end)
+	
 	-- Load data after a short delay to prevent freezing
+	-- Also refresh immediately if parent is already visible
 	C_Timer.After(0.1, function()
-		if frame and frame:IsVisible() then
+		if frame and frame == private.embeddedFrame then
 			private.RefreshEmbeddedDashboard()
 		end
 	end)

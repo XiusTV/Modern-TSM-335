@@ -1276,18 +1276,22 @@ function TSM:LoadOptions(parent)
 	tg:SetFullHeight(true)
 	tg:SetTabs({ { value = 1, text = L["TSM Info / Help"] }, { value = 2, text = "Analytics" }, { value = 3, text = L["Options"] }, { value = 4, text = L["Profiles"] }, { value = 5, text = TSMAPI.Design:ColorText(L["Custom Price Sources"], "advanced") } })
 	
-	-- Track current tab to know when to clean up Analytics
-	local currentTab = nil
+	-- Store current tab to track when to cleanup Analytics
+	private.currentOptionsTab = nil
 	
 	tg:SetCallback("OnGroupSelected", function(self, _, value)
-		-- Only clean up embedded dashboard when switching AWAY from Analytics (tab 2)
-		if currentTab == 2 and value ~= 2 then
+		-- Clean up embedded dashboard BEFORE releasing children (while parent still exists)
+		if private.currentOptionsTab == 2 then
+			-- We're switching AWAY from Analytics, clean it up
 			if TSM.Dashboard and TSM.Dashboard.HideEmbedded then
 				TSM.Dashboard.HideEmbedded()
 			end
 		end
 		
-		currentTab = value
+		-- Update current tab
+		private.currentOptionsTab = value
+		
+		-- Release children - this cleans up the AceGUI container
 		tg:ReleaseChildren()
 		StaticPopup_Hide("TSM_GLOBAL_OPERATIONS")
 
