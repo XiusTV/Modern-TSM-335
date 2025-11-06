@@ -1,3 +1,13 @@
+## 🔗 Related Projects
+
+**Other WotLK 3.3.5 Addons by XiusTV:**
+
+* [PFQuest-WotLK](https://github.com/XiusTV/PFQuest-Wotlk) - Automated quest database
+* [pfQuest-BronzeBeard](https://github.com/XiusTV/pfQuest-BronzeBeard) - Ascension-specific quest addon
+* [ElvUI VibeUI](https://github.com/XiusTV/Elvui-VibeUI) - Modern ElvUI configuration
+
+**Support**: [Buy Me A Coffee](https://www.buymeacoffee.com/xiustv)
+
 # Modern TSM for WotLK 3.3.5
 
 **Performance-optimized and visually modernized TradeSkillMaster suite for World of Warcraft 3.3.5 (Wrath of the Lich King).**
@@ -345,30 +355,6 @@ This addon follows the same license as the original TradeSkillMaster project.
 **All Rights Reserved** - See original TSM license for details.
 
 ---
-
-## 🔗 Related Projects
-
-**Other WotLK 3.3.5 Addons by XiusTV:**
-
-* [PFQuest-WotLK](https://github.com/XiusTV/PFQuest-Wotlk) - Automated quest database
-* [pfQuest-BronzeBeard](https://github.com/XiusTV/pfQuest-BronzeBeard) - Ascension-specific quest addon
-* [ElvUI VibeUI](https://github.com/XiusTV/Elvui-VibeUI) - Modern ElvUI configuration
-
-**Support**: [Buy Me A Coffee](https://www.buymeacoffee.com/xiustv)
-
----
-
-## 📞 Support & Feedback
-
-### Reporting Issues
-
-For issues with **this Modern TSM fork**, please open an issue on this repository.
-
-Include:
-* Error message (if any)
-* Steps to reproduce
-* Server name and auction count
-* WoW version (should be 3.3.5a)
 
 ### Feature Requests
 
