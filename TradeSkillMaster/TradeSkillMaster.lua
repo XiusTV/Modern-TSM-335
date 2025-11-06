@@ -805,3 +805,15 @@ function TSMAPI:GetItemPrices(itemLink)
 
     return prices
 end
+
+-- ============================================================================
+-- Phase 4: Initialize Dashboard & Gold Tracking
+-- ============================================================================
+
+-- Initialize Dashboard when TSM loads
+C_Timer.After(2, function()
+	if TSM.Dashboard then
+		TSM.Dashboard.Initialize()
+		TSM:Print("|cffffd700Dashboard loaded! Use: |cff00ff00/run TSM.Dashboard.Show()|r")
+	end
+end)

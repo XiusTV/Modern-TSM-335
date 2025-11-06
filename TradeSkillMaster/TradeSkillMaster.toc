@@ -54,6 +54,9 @@ Core\Database\QueryClause.lua
 Core\Database\Query.lua
 Core\Database\Table.lua
 Core\Database\Database.lua
+Core\GoldLog.lua
+Core\GoldTracker.lua
+Core\Dashboard.lua
 
 Util\Money.lua
 Util\Items.lua
@@ -117,3 +120,4 @@ Assistant\Steps.lua
 Tests\TestPhase1.lua
 Tests\TestPhase2.lua
 Tests\TestPhase3.lua
+Tests\TestPhase4.lua
