@@ -1275,12 +1275,19 @@ function TSM:LoadOptions(parent)
 	tg:SetFullWidth(true)
 	tg:SetFullHeight(true)
 	tg:SetTabs({ { value = 1, text = L["TSM Info / Help"] }, { value = 2, text = "Analytics" }, { value = 3, text = L["Options"] }, { value = 4, text = L["Profiles"] }, { value = 5, text = TSMAPI.Design:ColorText(L["Custom Price Sources"], "advanced") } })
+	
+	-- Track current tab to know when to clean up Analytics
+	local currentTab = nil
+	
 	tg:SetCallback("OnGroupSelected", function(self, _, value)
-		-- Clean up embedded dashboard when switching away from Analytics tab
-		if TSM.Dashboard and TSM.Dashboard.HideEmbedded then
-			TSM.Dashboard.HideEmbedded()
+		-- Only clean up embedded dashboard when switching AWAY from Analytics (tab 2)
+		if currentTab == 2 and value ~= 2 then
+			if TSM.Dashboard and TSM.Dashboard.HideEmbedded then
+				TSM.Dashboard.HideEmbedded()
+			end
 		end
 		
+		currentTab = value
 		tg:ReleaseChildren()
 		StaticPopup_Hide("TSM_GLOBAL_OPERATIONS")
 
@@ -1296,6 +1303,14 @@ function TSM:LoadOptions(parent)
 			private:LoadCustomPriceSources(self)
 		end
 	end)
+	
+	-- Clean up Analytics when TSM options window closes
+	parent.frame:SetScript("OnHide", function()
+		if TSM.Dashboard and TSM.Dashboard.HideEmbedded then
+			TSM.Dashboard.HideEmbedded()
+		end
+	end)
+	
 	parent:AddChild(tg)
 	tg:SelectTab(1)
 end
