@@ -138,15 +138,20 @@ function private:LoadHelpPage(parent)
 							text = TSMAPI.Design:ColorText(L["Co-Founder:"], "link") .. " Cente [US-Illidan(H)]",
 							relativeWidth = 1,
 						},
-						{
-							type = "Label",
-							text = TSMAPI.Design:ColorText(L["Wrath of the Lich King Revival:"], "link") .. " Gnomezilla [Warmane-Icecrown(A)], BlueAo [Warmane], andrew6180, Yoshiyuka, DimaSheiko, and other contributors...",
-							relativeWidth = 1,
-						},
+					{
+						type = "Label",
+						text = TSMAPI.Design:ColorText(L["Wrath of the Lich King Revival:"], "link") .. " Gnomezilla [Warmane-Icecrown(A)], BlueAo [Warmane], andrew6180, Yoshiyuka, DimaSheiko, and other contributors...",
+						relativeWidth = 1,
+					},
+					{
+						type = "Label",
+						text = TSMAPI.Design:ColorText("Modernization & Retail Features Backport:", "link") .. " |cffffd700XiusTV|r [Ascension-Bronzebeard]",
+						relativeWidth = 1,
 					},
 				},
 			},
 		},
+	},
 	}
 
 	for _, text in ipairs(moduleText) do
