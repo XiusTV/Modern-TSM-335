@@ -3,7 +3,6 @@
 **Other WotLK 3.3.5 Addons by XiusTV:**
 
 * [PFQuest-WotLK](https://github.com/XiusTV/PFQuest-Wotlk) - Automated quest database
-* [pfQuest-BronzeBeard](https://github.com/XiusTV/pfQuest-BronzeBeard) - Ascension-specific quest addon
 * [ElvUI VibeUI](https://github.com/XiusTV/Elvui-VibeUI) - Modern ElvUI configuration
 
 **Support**: [Buy Me A Coffee](https://www.buymeacoffee.com/xiustv)
