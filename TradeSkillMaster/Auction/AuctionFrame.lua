@@ -40,10 +40,30 @@ function private:CreateTSMAHTab(moduleName, callbackShow, callbackHide)
 	local tab = CreateFrame("Button", "AuctionFrameTab"..n, AuctionFrame, "AuctionTabTemplate")
 	tab:Hide()
 	tab:SetID(n)
-	tab:SetText(TSMAPI.Design:GetInlineColor("link2")..moduleName.."|r")
-	tab:SetNormalFontObject(GameFontHighlightSmall)
+	-- Use white text instead of bright colored text for modern aesthetic
+	tab:SetText(moduleName)
+	tab:SetNormalFontObject(GameFontNormalSmall)
 	tab.isTSMTab = moduleName
 	tab:SetPoint("LEFT", _G["AuctionFrameTab"..n-1], "RIGHT", -8, 0)
+	
+	-- Apply modern theme styling to TSM tabs
+	if TSM.modernDarkTheme then
+		-- Set text colors for different states
+		tab:GetFontString():SetTextColor(1, 1, 1, 1)  -- White for normal state
+		
+		-- Darken the tab background for better contrast
+		local left = tab:GetNormalTexture()
+		if left then
+			left:SetVertexColor(0.3, 0.3, 0.3, 0.8)  -- Darker gray
+		end
+		
+		-- Apply gold highlight color when selected (matching modern theme)
+		local highlightLeft = tab:GetHighlightTexture()
+		if highlightLeft then
+			highlightLeft:SetVertexColor(0.4, 0.4, 0.4, 0.6)  -- Subtle hover
+		end
+	end
+	
 	tab:Show()
 	PanelTemplates_SetNumTabs(AuctionFrame, n)
 	PanelTemplates_EnableTab(AuctionFrame, n)
@@ -71,7 +91,7 @@ function private:CreateTSMAHTab(moduleName, callbackShow, callbackHide)
 	iconText:SetJustifyV("CENTER")
 	iconText:SetFont(TSMAPI.Design:GetContentFont("normal"))
 	iconText:SetTextColor(165/255, 168/255, 188/255, .7)
-	local version = TSM._version
+	local version = "Rev700-M"  -- Shortened for icon display
 	iconText:SetText(version)
 	local ag = iconFrame:CreateAnimationGroup()
 	local spin = ag:CreateAnimation("Rotation")

@@ -2,7 +2,7 @@
 ## Title: |cff00fe00TradeSkillMaster: Revived|r
 ## Notes: Core addon for the TradeSkillMaster suite, revived for Wrath of the Lich King. Does nothing without modules installed.
 ## Author: Sapu94, Bart39, Gnomezilla [Warmane-Icecrown(A)], BlueAo [Warmane], andrew6180, Yoshiyuka, DimaSheiko, and other contributors...
-## Version: Rev668
+## Version: Rev700-Modernized
 ## SavedVariables: TradeSkillMasterAppDB, AscensionTSMDB
 ## OptionalDeps: AccurateTime, Ace3, LibDataBroker-1.1, LibDBIcon-1.0, LibExtraTip, TipHelper, LibParse, LibCompress, LibGraph-2.0, SharedMedia, TheUndermineJournal, TheUndermineJournalGE
 ## X-Embeds: AccurateTime, Ace3, LibDataBroker-1.1, LibDBIcon-1.0, LibExtraTip, TipHelper, LibParse, LibCompress, LibGraph-2.0
@@ -14,6 +14,7 @@ Libs\LibCompress\lib.xml
 Libs\AccurateTime\AccurateTime.lua
 Libs\LibChatAnims\LibChatAnims.xml
 Libs\LibExtraTip\Load.xml
+Libs\LibTSMClass\LibTSMClass.lua
 
 Locale\enUS.lua
 Locale\deDE.lua
@@ -44,6 +45,15 @@ Core\Tooltips.lua
 Core\Sync.lua
 Core\Prices.lua
 Core\Threading.lua
+Core\Util\TempTable.lua
+Core\Util\Table.lua
+Core\Settings\SettingsHelper.lua
+Core\Database\Schema.lua
+Core\Database\Row.lua
+Core\Database\QueryClause.lua
+Core\Database\Query.lua
+Core\Database\Table.lua
+Core\Database\Database.lua
 
 Util\Money.lua
 Util\Items.lua
@@ -95,6 +105,15 @@ GUI\TSMWidgets\TSMMultiLineEditBox.lua
 GUI\TSMWidgets\TSMImage.lua
 GUI\TSMWidgets\TSMGroupBox.lua
 
+GUI\TSMComponents\TSMDividedContainer.lua
+GUI\TSMComponents\TSMCollapsibleContainer.lua
+GUI\TSMComponents\TSMCustomStringInput.lua
+GUI\TSMComponents\TSMGraph.lua
+
 Assistant\Assistant.lua
 Assistant\Questions.lua
 Assistant\Steps.lua
+
+Tests\TestPhase1.lua
+Tests\TestPhase2.lua
+Tests\TestPhase3.lua

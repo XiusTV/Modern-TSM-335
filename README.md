@@ -12,15 +12,37 @@ This is a **heavily optimized and modernized version** of TradeSkillMaster (TSM)
 
 ## 🚀 Key Features
 
-### Performance Optimizations (40-90% Faster!)
+### Phase 1: Foundation - Object-Oriented Architecture
 
-* **50% faster auction scans** - Full scan of 50k auctions: 30min → 16min
-* **40% less memory usage** - Reduced from 180MB → 110MB on large scans
-* **75% faster error recovery** - Retry delays reduced from 2s → 0.5s
-* **2x faster market calculations** - Welford's single-pass algorithm
-* **Smart caching** - LRU cache with auto-cleanup (5-minute TTL)
-* **Event-driven updates** - Only scans bags when actually changed
-* **Hash-based detection** - 350x faster duplicate page checking
+* **LibTSMClass** - Full OOP framework with class inheritance
+* **TempTable** - Memory-efficient object pooling to reduce garbage collection
+* **Table Utilities** - Rich helper functions for data manipulation
+* **SettingsHelper** - Enhanced settings validation and management
+
+### Phase 2: Database System - SQL-like Queries
+
+* **Schema System** - Define table structures with validation
+* **Query Builder** - SQL-like interface for data queries
+* **Indexed Lookups** - Dramatically faster searches with O(1) complexity
+* **Type-Safe Data** - Validated data access with Row objects
+* **Cleaner Code** - Replace manual loops with elegant queries
+
+### Phase 3: UI Components - Modern Interface
+
+* **DividedContainer** - Resizable split panels with draggable divider
+* **CollapsibleContainer** - Expandable/collapsible sections for organization
+* **CustomStringInput** - Price string editor with validation
+* **Graph** - Data visualization for gold tracking and analytics
+
+### Performance Optimizations
+
+* **Much faster auction scans** - Optimized threading and caching
+* **Reduced memory usage** - Smart object pooling and cleanup
+* **Faster error recovery** - Improved retry logic
+* **Efficient calculations** - Single-pass algorithms
+* **Smart caching** - LRU cache with auto-cleanup
+* **Event-driven updates** - Only processes when needed
+* **Hash-based detection** - Quick duplicate checking
 
 ### Modern UI Overhaul (Retail-Inspired)
 
@@ -43,24 +65,20 @@ This is a **heavily optimized and modernized version** of TradeSkillMaster (TSM)
 
 ---
 
-## 📊 Performance Benchmarks
+## 🎯 What You Get
 
-### Scan Speed Improvements
+### Modern Architecture
+- **Object-Oriented Design** - Classes, inheritance, clean code structure
+- **Database System** - SQL-like queries replacing manual loops
+- **Advanced UI Components** - Retail TSM-style interface elements
+- **Type Safety** - Validated data access throughout
+- **Memory Efficient** - Object pooling and smart caching
 
-| Auction Count | Before | After | Improvement |
-|--------------|--------|-------|-------------|
-| 5,000 auctions | 3 min | 1.7 min | **44% faster** |
-| 25,000 auctions | 15 min | 8.3 min | **44% faster** |
-| 50,000 auctions | 30 min | 16 min | **47% faster** |
-| 100,000 auctions | 60 min | 30 min | **50% faster** |
-
-### Memory Usage Improvements
-
-| Operation | Before | After | Reduction |
-|-----------|--------|-------|-----------|
-| Full Scan (50k) | 180 MB | 110 MB | **39% less** |
-| GetAll (50k) | 220 MB | 140 MB | **36% less** |
-| Cache Storage | 50 MB | 30 MB | **40% less** |
+### Performance Improvements
+- **Faster Scans** - Significantly improved auction scanning
+- **Lower Memory** - Reduced memory footprint and garbage collection
+- **Quick Queries** - Indexed lookups for instant results
+- **Efficient Processing** - Optimized algorithms throughout
 
 ---
 
@@ -148,10 +166,27 @@ git clone https://github.com/XiusTV/Modern-TSM-335.git
 /tsm theme classic   - Classic green theme
 ```
 
+### Testing Phase 1-3 Components
+
+```lua
+-- Test Foundation (OOP, Utilities)
+/run TestPhase1()
+
+-- Test Database System
+/run TestPhase2()
+
+-- Test UI Components
+/run TestPhase3()
+
+-- Visual Demo (Collapsible Sections + Graph)
+/run TestPhase3Visual()
+```
+
 ### Performance Features (Automatic)
 
 * Scans are **automatically faster** - no configuration needed
 * Memory usage **automatically reduced**
+* Database queries use indexed lookups
 * Cache **auto-cleans** after 5 minutes
 * All optimizations **work in background**
 
@@ -159,39 +194,89 @@ git clone https://github.com/XiusTV/Modern-TSM-335.git
 
 ## 🔧 Technical Details
 
-### Optimizations Implemented
+### Architecture Improvements
 
-1. **Threading Quantum** - 3x processing per frame (50ms→150ms)
-2. **Retry Logic** - 75% faster recovery
-3. **Hash Duplicate Detection** - O(1) page comparison
-4. **LRU Cache Management** - Size-limited with auto-cleanup
-5. **Welford's Algorithm** - Single-pass variance calculation
-6. **Event-Driven Bag Updates** - Eliminates redundant scans
-7. **Hash Map Lookups** - O(1) item location finding
-8. **Query Optimization** - Pre-cached names, reduced yields
+**Phase 1: Foundation**
+1. **LibTSMClass** - OOP framework with inheritance
+2. **TempTable** - Object pooling for memory efficiency
+3. **Table Utilities** - Rich helper functions
+4. **SettingsHelper** - Settings validation
 
-### Files Modified
+**Phase 2: Database System**
+5. **Schema** - Table structure definition
+6. **Row Objects** - Type-safe records
+7. **Query Builder** - SQL-like interface
+8. **Indexed Tables** - Fast O(1) lookups
+9. **Database Management** - Multi-table support
 
-**Core TSM** (11 files total):
-* Core system files (Threading, Options, etc.)
-* GUI components (MainFrame, Gui, Design)
-* Auction scanning (AuctionScanning, QueryUtil)
-* Module integration (PostScan, data.lua)
+**Phase 3: UI Components**
+10. **DividedContainer** - Resizable split panels
+11. **CollapsibleContainer** - Expandable sections
+12. **CustomStringInput** - Price editor with validation
+13. **Graph** - Data visualization
 
-**New Files**:
-* `Core/ModernTheme.lua` - Theme management system
+### Performance Optimizations
+
+14. **Threading Quantum** - Increased processing per frame
+15. **Retry Logic** - Faster error recovery
+16. **Hash Duplicate Detection** - Quick page comparison
+17. **LRU Cache Management** - Size-limited with auto-cleanup
+18. **Welford's Algorithm** - Single-pass calculations
+19. **Event-Driven Updates** - Only when needed
+20. **Hash Map Lookups** - O(1) item finding
+
+### New Files Created
+
+**Phase 1** (5 files):
+* `Libs/LibTSMClass/` - OOP framework
+* `Core/Util/TempTable.lua` - Object pooling
+* `Core/Util/Table.lua` - Utilities
+* `Core/Settings/SettingsHelper.lua` - Settings
+
+**Phase 2** (6 files):
+* `Core/Database/Schema.lua`
+* `Core/Database/Row.lua`
+* `Core/Database/QueryClause.lua`
+* `Core/Database/Query.lua`
+* `Core/Database/Table.lua`
+* `Core/Database/Database.lua`
+
+**Phase 3** (4 files):
+* `GUI/TSMComponents/TSMDividedContainer.lua`
+* `GUI/TSMComponents/TSMCollapsibleContainer.lua`
+* `GUI/TSMComponents/TSMCustomStringInput.lua`
+* `GUI/TSMComponents/TSMGraph.lua`
+
+**Tests** (3 files):
+* `Tests/TestPhase1.lua`
+* `Tests/TestPhase2.lua`
+* `Tests/TestPhase3.lua`
+
+**Previously Added**:
+* `Core/ModernTheme.lua` - Theme management
 
 ---
 
 ## 📖 Documentation
 
-Comprehensive documentation included:
+### Phase Documentation
+* **PHASES_1_2_3_COMPLETE_README.md** - Complete overview
+* **PHASE1_COMPLETION_SUMMARY.md** - Foundation details
+* **PHASE2_COMPLETION_SUMMARY.md** - Database system
+* **PHASE3_COMPLETION_SUMMARY.md** - UI components
+* **TESTING_AND_COMMIT_GUIDE.md** - Testing instructions
 
+### Implementation Guides
+* **TSM_IMPLEMENTATION_GUIDE.md** - Master implementation guide
+* **TSM_BACKPORT_ANALYSIS.md** - Feature analysis
+* **TSM_PHASE2_DATABASE.md** - Database details
+* **TSM_PHASE3_UI_COMPONENTS.md** - UI component details
+
+### Additional Documentation
 * **TSM_Performance_Analysis.md** - Technical deep dive
-* **TSM_OPTIMIZATION_CHANGELOG.md** - User-friendly changes
 * **TSM_MODERN_THEME_README.md** - Theme guide
-* **TSM_Quick_Test_Guide.md** - Testing procedures
-* **INSTALLATION_CHECKLIST.md** - Step-by-step setup
+* **ALL_FIXES_COMPLETE.md** - Bug fix summary
+* **VERSION_AND_STYLING_UPDATE.md** - Version changes
 
 ---
 
@@ -293,20 +378,38 @@ Suggestions for additional optimizations or features are welcome!
 
 ## 📈 Project Statistics
 
-* **Performance Gain**: 40-90% faster scans
-* **Memory Reduction**: 30-70% less usage
-* **Files Modified**: 11 core files
-* **New Features**: Dynamic menu bar, 3 themes
+* **Architecture**: Object-oriented with full class system
+* **Database**: SQL-like queries with indexed lookups
+* **UI Components**: 4 modern retail-style components
+* **New Files**: 18 files created (Foundation, Database, UI)
+* **Tests**: Comprehensive test suite with visual demos
 * **Code Quality**: 0 linting errors
 * **Compatibility**: 100% backward compatible
 
 ---
 
-**Enjoy your lightning-fast, beautifully modern TSM!** 🚀
+## 🚀 What's Next
+
+### Phase 4: Dashboard & Gold Tracking (Planned)
+- Gold tracker service with time-series database
+- Dashboard UI using DividedContainer + Graph
+- Time range filtering (1D, 1W, 1M, 3M, 6M, 1Y)
+- Character selection and filtering
+- Revenue/expense breakdown
+
+### Phase 5+: Advanced Features (Planned)
+- Enhanced Ledger system
+- TaskList automation
+- Advanced Crafting improvements
+- And more retail TSM4 features!
 
 ---
 
-*Last Updated: November 5, 2025*  
-*Version: 1.0 (Phase 1 & 2 Complete)*  
+**Enjoy your modernized, lightning-fast TSM!** 🚀
+
+---
+
+*Last Updated: November 6, 2025*  
+*Version: Rev700-Modernized (Phases 1-3 Complete)*  
 *Maintainer: XiusTV*
 

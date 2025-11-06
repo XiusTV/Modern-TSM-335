@@ -13,6 +13,7 @@ local TSM = select(2, ...)
 TSM = LibStub("AceAddon-3.0"):NewAddon(TSM, "TradeSkillMaster", "AceEvent-3.0", "AceConsole-3.0", "AceHook-3.0")
 TSM.moduleObjects = {}
 TSM.moduleNames = {}
+_G.TSM = TSM  -- Expose TSM globally for test access
 
 local L = LibStub("AceLocale-3.0"):GetLocale("TradeSkillMaster") -- loads the localization table
 TSM._version = GetAddOnMetadata("TradeSkillMaster", "Version") -- current version of the addon
