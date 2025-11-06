@@ -4,6 +4,167 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [Rev700-Modernized-Phase5] - 2025-11-06
+
+### 🎉 Phase 5 Complete - Analytics Dashboard with Sales/Expense Tracking
+
+This release completes Phase 5, integrating TSM_Accounting data with the Dashboard to provide comprehensive sales, expense, and profit analytics with a fully interactive UI embedded in the TSM options panel.
+
+#### 📊 Phase 5: Analytics & Accounting Integration
+
+**AccountingTracker Module**
+- Bridge between TSM_Accounting and Dashboard
+- `GetSalesData()` / `GetExpenseData()` - Retrieve transaction data
+- `GetTopSellers()` / `GetTopExpenses()` - Top 5 items by revenue/cost
+- `GetProfitByItem()` - Profit calculation per item
+- `GetSalesTimeSeries()` / `GetExpenseTimeSeries()` - Time-series graph data
+- `GetSummaryStats()` - Aggregate statistics for time ranges
+- `IsAvailable()` - Check if TSM_Accounting module is loaded
+
+**Analytics Dashboard - Full Interactive UI**
+- **Embedded in TSM Options** - "Analytics" tab next to "TSM Info / Help"
+- **Multi-Series Graphs** - Visualize gold, sales, expenses, or all combined
+- **Graph Modes** - Gold Only | Gold + Sales | Gold + Expenses | All
+- **Time Ranges** - 1D, 1W, 1M, 3M, 6M, 1Y, All Time
+- **Character Filtering** - View all characters or select specific ones
+- **Statistics Panel** - Current gold, total sales, total expenses, net profit
+- **Transaction Details** - Top 5 sellers, top 5 expenses, recent transactions
+- **Real-Time Updates** - Graph and stats update when filters change
+
+**Enhanced TSMGraph Component**
+- **Multi-Series Support** - Display multiple data series on one graph
+- **Series Configuration** - Custom name, color, and data per series
+- **Smooth Line Rendering** - Fixed "disconnected jumble" issue with interpolated dots
+- **Backward Compatible** - Still supports single-series mode
+- **Color Customization** - Gold for gold, green for sales, red for expenses
+
+**Slash Commands**
+- `/tsm analytics` - Open standalone analytics window
+- `/tsm dashboard` - Alias for analytics
+- `/tsm dash` - Short alias for analytics
+
+**UI Integration**
+- **Analytics Tab** - Added to main TSM options panel
+- **Character Selector** - Dropdown menu with multi-select support
+- **Character Name Truncation** - Removed redundant realm info ("- Warcraft Reborn")
+- **Auto-Close Menu** - Character menu closes when main window closes
+- **Fixed Font Rendering** - Removed Unicode characters incompatible with WotLK fonts
+
+#### 🐛 Phase 5 Bug Fixes
+
+- Fixed graph rendering - replaced single textures with interpolated dot method for smooth lines
+- Fixed "icffaaaagra" text bug - removed broken inline color codes, used `SetTextColor()` instead
+- Fixed Analytics tab freeze - implemented `C_Timer.After()` delayed loading
+- Fixed `SetFontObject` error - removed unsupported method for `TSMLabel`
+- Fixed yellow Analytics tab - changed to white text matching other tabs
+- Fixed `/tsm analytics` command - integrated into `Core/Modules.lua` command handler
+- Fixed character menu staying open - added auto-close on window close
+- Fixed "?" icon in dropdown - removed Unicode arrow "▼" incompatible with WotLK fonts
+- Fixed time range/graph mode buttons in embedded view - detect standalone vs embedded mode
+- Fixed graph mode switching - now properly refreshes embedded dashboard
+- Fixed spacing issues - adjusted Graph Mode label spacing from buttons
+
+#### 📂 Files Added (Phase 5)
+
+**New Files** (2 files):
+- `Core/AccountingTracker.lua` - Accounting data bridge
+- `Tests/TestPhase5.lua` - 14 comprehensive tests for Phase 5
+
+#### 📝 Files Modified (Phase 5)
+
+**Core Files** (6 files):
+- `TradeSkillMaster.toc` - Added AccountingTracker.lua and TestPhase5.lua, updated credits
+- `TradeSkillMaster.lua` - Initialize Dashboard on load
+- `Core/Dashboard.lua` - Enhanced with accounting stats, multi-series graphs, embedded mode
+- `Core/Options.lua` - Added Analytics tab, embedded dashboard integration
+- `Core/Modules.lua` - Added `/tsm analytics` slash command support
+- `GUI/TSMComponents/TSMGraph.lua` - Multi-series support, fixed line rendering
+
+#### 🧪 Testing (Phase 5)
+
+**Test Suite** (14 tests):
+- `TestPhase5()` - Full test suite for AccountingTracker and graph components
+- `TestPhase5Live()` - Live Dashboard test (opens window)
+- `TestPhase5Visual()` - Graph component visual demo
+- `TestPhase5All()` - All Phase 5 tests at once
+- All 14 tests passing
+
+#### 🎓 What This Enables
+
+**Immediate Benefits**:
+- Full sales and expense tracking with visual analytics
+- Profit analysis per item and across all transactions
+- Time-series graphs showing gold, sales, and expenses
+- Character-specific filtering for multi-account gold tracking
+- Embedded analytics directly in TSM options (no separate window needed)
+
+**Future Development**:
+- Phase 6: Enhanced Ledger system
+- Phase 7: TaskList automation
+- Phase 8+: Additional retail TSM4 features
+
+---
+
+## [Rev700-Modernized-Phase4] - 2025-11-06
+
+### 🎉 Phase 4 Complete - Dashboard & Gold Tracking
+
+This release completes Phase 4, implementing a fully functional Dashboard with gold tracking, character filtering, and time-series graphing.
+
+#### 📈 Phase 4: Dashboard & Gold Tracking
+
+**GoldTracker Module**
+- Time-series gold tracking across all characters
+- `RecordGold()` - Track gold changes with timestamps
+- `GetGoldAtTime()` - Query historical gold at specific time
+- `GetGraphTimeRange()` - Get min/max time for graphs
+- `GetCharacterGuilds()` - List all tracked characters/guilds
+- Auto-cleanup of data older than 1 year
+
+**Dashboard Module**
+- Full interactive UI with graph, stats, and controls
+- Time range filtering (1D, 1W, 1M, 3M, 6M, 1Y, All)
+- Character filtering (All Characters or select specific ones)
+- Graph visualization using TSMGraph component
+- Statistics panel with current gold and change indicators
+- Slash command: `/tsm dashboard`
+
+**Data Management**
+- Saved variables: `TSM_DB.goldHistory` - stores all gold records
+- Efficient data structure: `[realm][character][timestamp] = goldAmount`
+- Automatic pruning of old records on login
+- Backward compatible with existing TSM data
+
+#### 🐛 Phase 4 Bug Fixes
+
+- Fixed `GetGoldAtTime()` interpolation logic for accurate historical values
+- Fixed time range selector button highlighting
+- Fixed character dropdown text updates
+- Fixed graph refresh when changing filters
+- Fixed stats display formatting
+
+#### 📂 Files Added (Phase 4)
+
+**New Files** (3 files):
+- `Core/GoldTracker.lua` - Gold tracking service
+- `Core/Dashboard.lua` - Dashboard UI and logic
+- `Tests/TestPhase4.lua` - 40 comprehensive tests
+
+#### 📝 Files Modified (Phase 4)
+
+**Core Files** (2 files):
+- `TradeSkillMaster.toc` - Added GoldTracker, Dashboard, TestPhase4
+- `TradeSkillMaster.lua` - Initialize gold tracking and dashboard
+
+#### 🧪 Testing (Phase 4)
+
+**Test Suite** (40 tests):
+- `TestPhase4()` - Full test suite
+- `TestPhase4Live()` - Live Dashboard test
+- All 40 tests passing
+
+---
+
 ## [Rev700-Modernized] - 2025-11-06
 
 ### 🎉 Major Update - Phases 1-3 Complete (Architectural Modernization)

@@ -145,7 +145,7 @@ function private:LoadHelpPage(parent)
 					},
 					{
 						type = "Label",
-						text = TSMAPI.Design:ColorText("Modernization & Retail Features Backport:", "link") .. " |cffffd700XiusTV|r [Ascension-Bronzebeard]",
+						text = TSMAPI.Design:ColorText("Modernization & Retail Features Backport:", "link") .. " XiusTV",
 						relativeWidth = 1,
 					},
 				},
@@ -1250,12 +1250,31 @@ function private:DrawCustomPriceSourceOptions(container, customPriceName)
 end
 
 
+function private:LoadDashboardPage(parent)
+	-- Create main container
+	local container = AceGUI:Create("TSMSimpleGroup")
+	container:SetLayout("Fill")
+	container:SetFullWidth(true)
+	container:SetFullHeight(true)
+	parent:AddChild(container)
+	
+	-- Create the embedded dashboard directly
+	if TSM.Dashboard then
+		TSM.Dashboard.ShowEmbedded(container.frame)
+	else
+		-- Fallback if Dashboard not loaded
+		local errorLabel = container.frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+		errorLabel:SetPoint("CENTER")
+		errorLabel:SetText("|cffff0000Dashboard not loaded!|r\nTry /reload")
+	end
+end
+
 function TSM:LoadOptions(parent)
 	local tg = AceGUI:Create("TSMTabGroup")
 	tg:SetLayout("Fill")
 	tg:SetFullWidth(true)
 	tg:SetFullHeight(true)
-	tg:SetTabs({ { value = 1, text = L["TSM Info / Help"] }, { value = 2, text = L["Options"] }, { value = 3, text = L["Profiles"] }, { value = 4, text = TSMAPI.Design:ColorText(L["Custom Price Sources"], "advanced") } })
+	tg:SetTabs({ { value = 1, text = L["TSM Info / Help"] }, { value = 2, text = "Analytics" }, { value = 3, text = L["Options"] }, { value = 4, text = L["Profiles"] }, { value = 5, text = TSMAPI.Design:ColorText(L["Custom Price Sources"], "advanced") } })
 	tg:SetCallback("OnGroupSelected", function(self, _, value)
 		tg:ReleaseChildren()
 		StaticPopup_Hide("TSM_GLOBAL_OPERATIONS")
@@ -1263,10 +1282,12 @@ function TSM:LoadOptions(parent)
 		if value == 1 then
 			private:LoadHelpPage(self)
 		elseif value == 2 then
-			private:LoadOptionsPage(self)
+			private:LoadDashboardPage(self)
 		elseif value == 3 then
-			private:LoadProfilesPage(self)
+			private:LoadOptionsPage(self)
 		elseif value == 4 then
+			private:LoadProfilesPage(self)
+		elseif value == 5 then
 			private:LoadCustomPriceSources(self)
 		end
 	end)

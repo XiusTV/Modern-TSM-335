@@ -340,6 +340,14 @@ function Modules:ChatCommand(input)
 	if cmd == "" then
 		TSMAPI:OpenFrame()
 		TSMAPI:SelectIcon("TradeSkillMaster", L["TSM Status / Options"])
+	elseif cmd == "analytics" or cmd == "dashboard" or cmd == "dash" then
+		-- Open Analytics Dashboard
+		if TSM.Dashboard then
+			TSM.Dashboard.Show()
+		else
+			TSM:Print("|cffff0000Analytics Dashboard not loaded!|r Try /reload")
+		end
+		return
 	else
 		local foundCmd
 		for _, obj in pairs(moduleObjects) do
@@ -358,6 +366,9 @@ function Modules:ChatCommand(input)
 			TSM:Print(L["Slash Commands:"])
 			chatFrame:AddMessage("|cffffaa00" .. L["/tsm|r - opens the main TSM window."])
 			chatFrame:AddMessage("|cffffaa00" .. L["/tsm help|r - Shows this help listing"])
+			chatFrame:AddMessage("|cffffaa00/tsm analytics|r - Opens Analytics Dashboard")
+			chatFrame:AddMessage("|cffffaa00/tsm dashboard|r - Same as analytics (alias)")
+			chatFrame:AddMessage("|cffffaa00/tsm dash|r - Short version")
 			for _, name in ipairs(moduleNames) do
 				for _, info in ipairs(moduleObjects[name].slashCommands or {}) do
 					chatFrame:AddMessage("|cffffaa00/tsm " .. info.key .. "|r - " .. info.label)

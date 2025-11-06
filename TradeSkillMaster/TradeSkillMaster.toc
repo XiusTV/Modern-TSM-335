@@ -1,7 +1,7 @@
 ﻿## Interface: 30300
 ## Title: |cff00fe00TradeSkillMaster: Revived|r
 ## Notes: Core addon for the TradeSkillMaster suite, revived for Wrath of the Lich King. Does nothing without modules installed.
-## Author: Sapu94, Bart39, Gnomezilla [Warmane-Icecrown(A)], BlueAo [Warmane], andrew6180, Yoshiyuka, DimaSheiko, XiusTV [Ascension-Bronzebeard], and other contributors...
+## Author: Sapu94, Bart39, Gnomezilla [Warmane-Icecrown(A)], BlueAo [Warmane], andrew6180, Yoshiyuka, DimaSheiko, XiusTV, and other contributors...
 ## Version: Rev700-Modernized
 ## SavedVariables: TradeSkillMasterAppDB, AscensionTSMDB
 ## OptionalDeps: AccurateTime, Ace3, LibDataBroker-1.1, LibDBIcon-1.0, LibExtraTip, TipHelper, LibParse, LibCompress, LibGraph-2.0, SharedMedia, TheUndermineJournal, TheUndermineJournalGE
@@ -56,6 +56,7 @@ Core\Database\Table.lua
 Core\Database\Database.lua
 Core\GoldLog.lua
 Core\GoldTracker.lua
+Core\AccountingTracker.lua
 Core\Dashboard.lua
 
 Util\Money.lua
@@ -121,3 +122,4 @@ Tests\TestPhase1.lua
 Tests\TestPhase2.lua
 Tests\TestPhase3.lua
 Tests\TestPhase4.lua
+Tests\TestPhase5.lua

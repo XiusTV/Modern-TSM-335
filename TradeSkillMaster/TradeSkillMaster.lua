@@ -814,6 +814,8 @@ end
 C_Timer.After(2, function()
 	if TSM.Dashboard then
 		TSM.Dashboard.Initialize()
-		TSM:Print("|cffffd700Dashboard loaded! Use: |cff00ff00/run TSM.Dashboard.Show()|r")
+		TSM:Print("|cffffd700Analytics Dashboard loaded! Use: |cff00ff00/tsm analytics|r")
 	end
 end)
+
+-- Slash commands now handled in Core/Modules.lua ChatCommand function

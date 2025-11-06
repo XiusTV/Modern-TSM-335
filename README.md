@@ -44,6 +44,26 @@ This is a **heavily optimized and modernized version** of TradeSkillMaster (TSM)
 * **CustomStringInput** - Price string editor with validation
 * **Graph** - Data visualization for gold tracking and analytics
 
+### Phase 4: Dashboard & Gold Tracking ⭐NEW
+
+* **GoldTracker** - Time-series gold tracking across all characters
+* **Dashboard UI** - Interactive dashboard with graphs and statistics
+* **Time Range Filters** - 1D, 1W, 1M, 3M, 6M, 1Y, All Time
+* **Character Filtering** - View all or select specific characters
+* **Historical Data** - Query gold at any point in time
+* **Auto-Cleanup** - Removes data older than 1 year
+
+### Phase 5: Analytics & Accounting Integration ⭐NEW
+
+* **AccountingTracker** - Bridge TSM_Accounting data to Dashboard
+* **Sales/Expense Analytics** - Full transaction tracking with profit analysis
+* **Multi-Series Graphs** - Visualize gold, sales, expenses simultaneously
+* **Graph Modes** - Gold Only | Gold + Sales | Gold + Expenses | All
+* **Analytics Tab** - Embedded directly in TSM options panel
+* **Top Items** - Top 5 sellers and top 5 expenses
+* **Transaction History** - Recent transaction details
+* **Slash Commands** - `/tsm analytics`, `/tsm dashboard`, `/tsm dash`
+
 ### Performance Optimizations
 
 * **Much faster auction scans** - Optimized threading and caching
@@ -176,7 +196,24 @@ git clone https://github.com/XiusTV/Modern-TSM-335.git
 /tsm theme classic   - Classic green theme
 ```
 
-### Testing Phase 1-3 Components
+### Analytics & Dashboard (Phases 4-5)
+
+**Via GUI** (Recommended):
+1. `/tsm` → Click "TSM Status / Options"
+2. Click "Analytics" tab
+3. View gold tracking, sales, expenses, and profit
+4. Filter by time range (1D, 1W, 1M, 3M, 6M, 1Y, All)
+5. Filter by character (All or select specific ones)
+6. Switch graph modes (Gold Only, Gold + Sales, Gold + Expenses, All)
+
+**Via Command**:
+```
+/tsm analytics       - Open analytics dashboard
+/tsm dashboard       - Same as analytics
+/tsm dash            - Short alias
+```
+
+### Testing Phase 1-5 Components
 
 ```lua
 -- Test Foundation (OOP, Utilities)
@@ -190,6 +227,16 @@ git clone https://github.com/XiusTV/Modern-TSM-335.git
 
 -- Visual Demo (Collapsible Sections + Graph)
 /run TestPhase3Visual()
+
+-- Test Dashboard & Gold Tracking
+/run TestPhase4()
+
+-- Test Analytics & Accounting Integration
+/run TestPhase5()
+
+-- Visual Demo (Live Dashboard)
+/run TestPhase4Live()
+/run TestPhase5Live()
 ```
 
 ### Performance Features (Automatic)
@@ -367,8 +414,9 @@ Suggestions for additional optimizations or features are welcome!
 * **Architecture**: Object-oriented with full class system
 * **Database**: SQL-like queries with indexed lookups
 * **UI Components**: 4 modern retail-style components
-* **New Files**: 18 files created (Foundation, Database, UI)
-* **Tests**: Comprehensive test suite with visual demos
+* **Dashboard & Analytics**: Full gold tracking + sales/expense analytics ⭐NEW
+* **New Files**: 23 files created (Foundation, Database, UI, Dashboard, Analytics)
+* **Tests**: 68 comprehensive tests (18 Phase 1-3, 40 Phase 4, 14 Phase 5) ⭐UPDATED
 * **Code Quality**: 0 linting errors
 * **Compatibility**: 100% backward compatible
 
@@ -376,26 +424,36 @@ Suggestions for additional optimizations or features are welcome!
 
 ## 🚀 What's Next
 
-### Phase 4: Dashboard & Gold Tracking (Planned)
-- Gold tracker service with time-series database
-- Dashboard UI using DividedContainer + Graph
-- Time range filtering (1D, 1W, 1M, 3M, 6M, 1Y)
-- Character selection and filtering
-- Revenue/expense breakdown
+### Phase 4: Dashboard & Gold Tracking ✅ COMPLETE
+- ✅ Gold tracker service with time-series database
+- ✅ Dashboard UI using DividedContainer + Graph
+- ✅ Time range filtering (1D, 1W, 1M, 3M, 6M, 1Y, All)
+- ✅ Character selection and filtering
+- ✅ Historical gold queries
 
-### Phase 5+: Advanced Features (Planned)
-- Enhanced Ledger system
-- TaskList automation
+### Phase 5: Analytics & Accounting Integration ✅ COMPLETE
+- ✅ AccountingTracker module bridging TSM_Accounting
+- ✅ Sales and expense tracking with profit analysis
+- ✅ Multi-series graphs (gold, sales, expenses)
+- ✅ Analytics tab embedded in TSM options
+- ✅ Top items and transaction history
+- ✅ Full interactive UI with real-time updates
+
+### Phase 6+: Advanced Features (Planned)
+- Enhanced Ledger system with advanced filtering
+- TaskList automation and queue management
 - Advanced Crafting improvements
+- Shopping list enhancements
+- Mailing automation upgrades
 - And more retail TSM4 features!
 
 ---
 
-**Enjoy your modernized, lightning-fast TSM!** 🚀
+**Enjoy your modernized, lightning-fast TSM with full analytics!** 🚀
 
 ---
 
 *Last Updated: November 6, 2025*  
-*Version: Rev700-Modernized (Phases 1-3 Complete)*  
+*Version: Rev700-Modernized (Phases 1-5 Complete)*  
 *Maintainer: XiusTV*
 
