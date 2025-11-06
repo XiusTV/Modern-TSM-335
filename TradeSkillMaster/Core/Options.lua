@@ -1276,6 +1276,11 @@ function TSM:LoadOptions(parent)
 	tg:SetFullHeight(true)
 	tg:SetTabs({ { value = 1, text = L["TSM Info / Help"] }, { value = 2, text = "Analytics" }, { value = 3, text = L["Options"] }, { value = 4, text = L["Profiles"] }, { value = 5, text = TSMAPI.Design:ColorText(L["Custom Price Sources"], "advanced") } })
 	tg:SetCallback("OnGroupSelected", function(self, _, value)
+		-- Clean up embedded dashboard when switching away from Analytics tab
+		if TSM.Dashboard and TSM.Dashboard.HideEmbedded then
+			TSM.Dashboard.HideEmbedded()
+		end
+		
 		tg:ReleaseChildren()
 		StaticPopup_Hide("TSM_GLOBAL_OPERATIONS")
 

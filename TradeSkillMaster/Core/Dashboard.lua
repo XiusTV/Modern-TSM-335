@@ -70,8 +70,30 @@ function Dashboard.Show()
 end
 
 function Dashboard.ShowEmbedded(parentFrame)
+	-- Clean up any existing embedded dashboard first
+	Dashboard.HideEmbedded()
+	
 	-- Create embedded dashboard that fits in TSM options
 	private.CreateEmbeddedDashboard(parentFrame)
+end
+
+function Dashboard.HideEmbedded()
+	-- Clean up embedded dashboard
+	if private.embeddedFrame then
+		if private.embeddedFrame.graph then
+			private.embeddedFrame.graph:Release()
+			private.embeddedFrame.graph = nil
+		end
+		private.embeddedFrame:Hide()
+		private.embeddedFrame:SetParent(nil)
+		private.embeddedFrame = nil
+	end
+	
+	-- Clean up character menu if open
+	if private.characterMenu then
+		private.characterMenu:Hide()
+		private.characterMenu = nil
+	end
 end
 
 function private.CreateMainFrame()
