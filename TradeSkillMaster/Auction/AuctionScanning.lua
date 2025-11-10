@@ -14,7 +14,7 @@ TSMAPI.AuctionScan = {}
 local RETRY_DELAY = 0.5  -- OPTIMIZED: Reduced from 2s to 0.5s for faster recovery
 local MAX_RETRIES = 4
 local BASE_DELAY = 0.05  -- OPTIMIZED: Reduced from 0.10s to 0.05s for faster retry attempts
-local private = { callbackHandler = nil, query = {}, options = {}, data = {}, isScanning = nil }
+local private = { callbackHandler = nil, query = {}, options = {}, data = {}, isScanning = nil, quickMode = false }
 TSMAPI:RegisterForTracing(private, "TradeSkillMaster.AuctionScanning_private")
 local scanCache = {}
 local cacheAccessOrder = {}  -- OPTIMIZED: LRU tracking for cache management
@@ -59,11 +59,19 @@ function private:ScanAuctionPage(resolveSellers)
 	for i = 1, shown do
 		-- checks to make sure all the data has been sent to the client
 		-- if not, the data is bad and we'll wait / try again
-		-- local count, _, _, _, _, _, _, buyout, _, _, _, seller = select(3, GetAuctionItemInfo("list", i))
-		local count, _, _, _, _, _, buyout, _, _, seller = select(3, GetAuctionItemInfo("list", i))
-		local itemString = TSMAPI:GetItemString(GetAuctionItemLink("list", i))
-		auctions[i] = { itemString = itemString, index = i, count = count, buyout = buyout, seller = seller }
-		if not (itemString and buyout and count and (seller or not resolveSellers or buyout == 0)) then
+		local _, _, count, _, _, _, _, minBid, _, buyout, bid, _, seller = GetAuctionItemInfo("list", i)
+		local link = GetAuctionItemLink("list", i)
+		local itemString = link and TSMAPI:GetItemString(link)
+		local hasSellerInfo = private.quickMode or seller or not resolveSellers or buyout == 0
+
+		if private.quickMode then
+			local itemID = itemString and tonumber(itemString:match("item:(%d+)"))
+			auctions[i] = { itemID = itemID, count = count or 0, minBid = minBid or bid, buyout = buyout }
+		else
+			auctions[i] = { itemString = itemString, index = i, count = count, buyout = buyout, seller = seller }
+		end
+
+		if not (itemString and count and hasSellerInfo and (buyout or minBid)) then
 			badData = true
 		end
 	end
@@ -86,6 +94,9 @@ local function GetPageHash()
 end
 
 function IsDuplicatePage()
+	if private.quickMode then
+		return false
+	end
 	if not private.lastPageHash or GetNumAuctionItems("list") == 0 then 
 		private.lastPageHash = GetPageHash()
 		return false 
@@ -121,43 +132,56 @@ end
 --			name, minLevel, maxLevel, invType, class, subClass, usable, quality
 --    resolveSellers - whether or not to resolve seller names
 --    maxPrice - stop scanning when prices go above this price
-function TSMAPI.AuctionScan:RunQuery(query, callbackHandler, resolveSellers, maxPrice, doCache)
-	TSMAPI.AuctionScan:StopScan() -- stop any scan in progress
+function TSMAPI.AuctionScan:RunQuery(query, callbackHandler, resolveSellers, maxPrice, doCache, options)
+    options = options or {}
+    TSMAPI.AuctionScan:StopScan() -- stop any scan in progress
 
-	if not AuctionFrame:IsVisible() then
-		return -1 -- the auction house isn't open (return code -1)
-	elseif type(query) ~= "table" then
-		return -2 -- the scan queue is not a table (return code -2)
-	elseif not CanSendAuctionQuery() then
-		TSMAPI:CreateTimeDelay("cantSendAuctionQueryDelay", 0.1, function() TSMAPI.AuctionScan:RunQuery(query, callbackHandler, resolveSellers, maxPrice, doCache) end)
-		return 0 -- the query will start as soon as it can but did not start immediately (return code 0)
-	end
+    if not AuctionFrame:IsVisible() then
+        return -1 -- the auction house isn't open (return code -1)
+    elseif type(query) ~= "table" then
+        return -2 -- the scan queue is not a table (return code -2)
+    elseif not CanSendAuctionQuery() then
+        TSMAPI:CreateTimeDelay("cantSendAuctionQueryDelay", 0.1, function()
+            TSMAPI.AuctionScan:RunQuery(query, callbackHandler, resolveSellers, maxPrice, doCache, options)
+        end)
+        return 0 -- the query will start as soon as it can but did not start immediately (return code 0)
+    end
 
-	-- sort by buyout
-	SortAuctionItems("list", "buyout")
-	if IsAuctionSortReversed("list", "buyout") then
-		SortAuctionItems("list", "buyout")
-	end
+    private.quickMode = options.quickMode or false
+    private.skipSort = options.skipSort or private.quickMode
 
-	-- setup the query
-	private.query = CopyTable(query)
-	private.query.page = 0 -- the current page of this query we're scanning
-	private.query.timeDelay = 0 -- a delay used to wait for information to show up
-	private.query.retries = 0 -- how many times we've done a hard retry so far
-	private.query.hardRetry = nil -- if a page hasn't loaded after we've tried a delay, we'll do a hard retry and re-send the query
-	private.cache = doCache and { query = CopyTable(query), items = {} } or nil
+    -- sort by buyout unless disabled
+    if not private.skipSort then
+        SortAuctionItems("list", "buyout")
+        if IsAuctionSortReversed("list", "buyout") then
+            SortAuctionItems("list", "buyout")
+        end
+    end
 
-	-- setup other stuff
-	wipe(private.data)
-	private.isScanning = true
-	private.callbackHandler = callbackHandler
-	private.resolveSellers = resolveSellers
-	private.scanType = "query"
-	private.maxPrice = maxPrice or math.huge
+    -- setup the query
+    private.query = CopyTable(query)
+    private.query.page = 0 -- the current page of this query we're scanning
+    private.query.timeDelay = 0 -- a delay used to wait for information to show up
+    private.query.retries = 0 -- how many times we've done a hard retry so far
+    private.query.hardRetry = nil -- if a page hasn't loaded after we've tried a delay, we'll do a hard retry and re-send the query
+    if private.quickMode then
+        private.cache = nil
+    else
+        private.cache = doCache and { query = CopyTable(query), items = {} } or nil
+    end
 
-	--starts scanning
-	private:SendQuery()
-	return 1 -- scan started successfully (return code 1)
+    -- setup other stuff
+    wipe(private.data)
+    private.quickData = private.quickMode and {} or nil
+    private.isScanning = true
+    private.callbackHandler = callbackHandler
+    private.resolveSellers = resolveSellers and not (options.skipSellerResolution or private.quickMode)
+    private.scanType = "query"
+    private.maxPrice = maxPrice or math.huge
+
+    --starts scanning
+    private:SendQuery()
+    return 1 -- scan started successfully (return code 1)
 end
 
 function TSMAPI.AuctionScan:ScanLastPage(callbackHandler)
@@ -239,10 +263,11 @@ function private:ScanAuctions()
 		end
 	end
 
-	local dataIsBad, auctions = private:ScanAuctionPage(private.resolveSellers)
+    local dataIsBad, auctions = private:ScanAuctionPage(private.resolveSellers)
 
 	-- check that we have good data
-	if dataIsBad or IsDuplicatePage() then
+	local skipDuplicateCheck = private.quickMode
+	if dataIsBad or (not skipDuplicateCheck and IsDuplicatePage()) then
 		if private.query.retries < MAX_RETRIES then
 			if private.query.hardRetry then
 				-- Hard retry
@@ -267,42 +292,69 @@ function private:ScanAuctions()
 		end
 	end
 
-	if private.cache then
-		-- store info in cache
-		for i, v in ipairs(auctions) do
-			local cacheTmp = CopyTable(v)
-			cacheTmp.index = private.query.page * 50 + i
-			tinsert(private.cache, cacheTmp)
-			private.cache.items[cacheTmp.itemString] = true
-		end
-	end
+    if private.cache then
+        -- store info in cache
+        for i, v in ipairs(auctions) do
+            local cacheTmp = CopyTable(v)
+            cacheTmp.index = private.query.page * 50 + i
+            tinsert(private.cache, cacheTmp)
+            private.cache.items[cacheTmp.itemString] = true
+        end
+    end
 
-	private.query.hardRetry = nil
-	private.query.retries = 0
-	private.query.timeDelay = 0
-	if private.scanType ~= "lastPage" then
-		private.query.page = private.query.page + 1 -- increment current page
-		if totalPages > 0 then
-			DoCallback("SCAN_PAGE_UPDATE", private.query.page, totalPages)
-		end
-	end
-	PopulatePageTemp()
+    private.query.hardRetry = nil
+    private.query.retries = 0
+    private.query.timeDelay = 0
+    if private.scanType ~= "lastPage" then
+        private.query.page = private.query.page + 1 -- increment current page
+        if totalPages > 0 then
+            DoCallback("SCAN_PAGE_UPDATE", private.query.page, totalPages)
+        end
+    end
+    if not private.quickMode then
+        PopulatePageTemp()
+    end
 
-	-- now that we know our query is good, time to verify and then store our data
-	for _, v in ipairs(auctions) do
-		if private:AddAuctionRecord(v.index) then
-			-- we've hit the max price so we're done scanning
-			private:StopScanning()
-			return DoCallback("SCAN_COMPLETE", private.data)
-		end
-	end
+    if private.quickMode then
+        for _, v in ipairs(auctions) do
+            local itemID = v.itemID
+            local stackSize = v.count or 0
+            if itemID and stackSize > 0 then
+                local perBid = (v.minBid and v.minBid > 0) and floor(v.minBid / stackSize) or nil
+                local perBuyout = (v.buyout and v.buyout > 0) and floor(v.buyout / stackSize) or nil
+                if perBid or perBuyout then
+                    local entry = private.quickData[itemID]
+                    if not entry then
+                        entry = { quantity = 0 }
+                        private.quickData[itemID] = entry
+                    end
+                    entry.quantity = (entry.quantity or 0) + stackSize
+                    if perBuyout then
+                        entry.minBuyout = entry.minBuyout and math.min(entry.minBuyout, perBuyout) or perBuyout
+                    end
+                    if perBid then
+                        entry.minBid = entry.minBid and math.min(entry.minBid, perBid) or perBid
+                    end
+                end
+            end
+        end
+    else
+        -- now that we know our query is good, time to verify and then store our data
+        for _, v in ipairs(auctions) do
+            if private:AddAuctionRecord(v.index) then
+                -- we've hit the max price so we're done scanning
+                private:StopScanning()
+                return DoCallback("SCAN_COMPLETE", private.data)
+            end
+        end
+    end
 
 	if private.scanType == "lastPage" then
 		return DoCallback("SCAN_LAST_PAGE_COMPLETE", private.data)
-	elseif private.query.page >= totalPages then
-		-- we have finished scanning this query
-		private:StopScanning()
-		return DoCallback("SCAN_COMPLETE", private.data)
+    elseif private.query.page >= totalPages then
+        -- we have finished scanning this query
+        private:StopScanning()
+        return DoCallback("SCAN_COMPLETE", private.quickMode and private.quickData or private.data)
 	end
 
 	-- query the next page and continue scanning
@@ -408,6 +460,8 @@ function private:StopScanning()
 	private.isScanning = nil
 	private.pageTemp = nil
 	private.lastPageHash = nil  -- OPTIMIZED: Clear hash cache
+    private.quickData = nil
+    private.quickMode = false
 end
 
 -- API for stopping the scan

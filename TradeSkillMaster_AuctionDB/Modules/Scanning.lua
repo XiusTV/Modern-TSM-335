@@ -18,6 +18,7 @@ Scan.numFilters = 0
 Scan.fullScanStartTime = 0
 Scan.fullScanSecondsPerPage = -1
 Scan.fullScanCompleteElapsed = nil
+Scan.quickScanActive = false
 
 local verifyNewAlgorithm = false  -- DEVELOPERS: Set to "true" to validate and benchmark the new market data algorithm!
 
@@ -154,7 +155,11 @@ local function FullScanCallback(event, ...)
 
 		-- Now process all of the fetched auctions, and display the total time elapsed.
 		local data = ...
-		Scan:ProcessScanData(data)
+		if Scan.quickScanActive then
+			Scan:ProcessQuickScanData(data)
+		else
+			Scan:ProcessScanData(data)
+		end
 		Scan:DoneScanning(Scan.fullScanCompleteElapsed)
 	elseif event == "SCAN_INTERRUPTED" or event == "INTERRUPTED" then
 		-- We've been interrupted by the Auction House closing.
@@ -473,6 +478,7 @@ function Scan:StartGroupScan(items)
 	TSM.GUI:UpdateStatus(L["Preparing Filters..."])
 end
 
+
 function Scan:StartFullScan()
 	Scan.isScanning = "Full"
 	TSM.GUI:UpdateStatus(L["Running query..."])
@@ -482,7 +488,21 @@ function Scan:StartFullScan()
 	Scan.fullScanStartTime = time()  -- Keep track of when we started the "Full Scan".
 	Scan.fullScanSecondsPerPage = -1  -- Reset the page-speed timer.
 	Scan.fullScanCompleteElapsed = nil  -- Reset the "full scan completed" information.
+	Scan.quickScanActive = false
 	TSMAPI.AuctionScan:RunQuery({name=""}, FullScanCallback)
+end
+
+function Scan:StartFullQuickScan()
+	Scan.isScanning = "FullQuick"
+	Scan.isBuggedGetAll = nil
+	Scan.groupItems = nil
+	TSM.GUI:UpdateStatus(L["Running query..."])
+	TSMAPI.AuctionScan:StopScan()
+	Scan.fullScanStartTime = time()
+	Scan.fullScanSecondsPerPage = -1
+	Scan.fullScanCompleteElapsed = nil
+	Scan.quickScanActive = true
+	TSMAPI.AuctionScan:RunQuery({name=""}, FullScanCallback, nil, nil, nil, { quickMode = true })
 end
 
 function Scan:StartGetAllScan()
@@ -514,6 +534,7 @@ function Scan:DoneScanning(seconds_elapsed)
 	end
 	Scan.isScanning = nil
 	Scan.getAllLoaded = nil
+	Scan.quickScanActive = false
 end
 
 function Scan:ProcessScanData(scanData)
@@ -574,6 +595,23 @@ function Scan:ProcessScanData(scanData)
 
 	-- Process the collected auction data.
 	TSM.Data:ProcessData(data, Scan.groupItems, verifyNewAlgorithm)
+end
+
+function Scan:ProcessQuickScanData(quickData)
+	if not quickData then return end
+	local now = time()
+	for itemID, data in pairs(quickData) do
+		if type(itemID) == "number" and data and data.minBuyout and data.minBuyout > 0 then
+			TSM:DecodeItemData(itemID)
+			TSM.data[itemID] = TSM.data[itemID] or { scans = {}, lastScan = 0 }
+			TSM.data[itemID].lastScan = now
+			TSM.data[itemID].minBuyout = data.minBuyout
+			TSM.data[itemID].quantity = data.quantity or 0
+			TSM:EncodeItemData(itemID)
+		end
+	end
+	TSM.db.realm.lastQuickScan = now
+	TSM:Print(L["Quick scan complete. Market values will update after a full scan."])
 end
 
 function Scan:ProcessImportedData(auctionData)

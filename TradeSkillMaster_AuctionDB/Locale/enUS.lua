@@ -16,6 +16,7 @@ if not L then return end
 L["%s ago"] = true
 L["A GetAll scan is the fastest in-game method for scanning every item on the auction house. However, there are many possible bugs on Blizzard's end with it including the chance for it to disconnect you from the game. Also, it has a 15 minute cooldown. You can disable the GetAll button via TSM's AuctionDB options if this feature doesn't work well on your server."] = true
 L["A full auction house scan will scan every item on the auction house but is far slower than a GetAll scan. Expect this scan to take several minutes or longer."] = true
+L["A quick full scan captures only minimum buyout and quantity data for each item. It finishes faster, but market value calculations are not refreshed until a full scan is run."] = true
 L["Any items in the AuctionDB database that contain the search phrase in their names will be displayed."] = true
 L["Are you sure you want to clear your AuctionDB data?"] = true
 L["Ascending"] = true
@@ -72,7 +73,9 @@ L["Reset Data"] = true
 L["Resets AuctionDB's scan data"] = true
 L["Result Order:"] = true
 L["Run Full Scan"] = true
+L["Run Quick Full Scan"] = true
 L["Run GetAll Scan"] = true
+L["Quick scan complete. Market values will update after a full scan."] = true
 L["Running query..."] = true
 L["Running query... Server not responding due to throttling? Try again later..."] = true
 L["Scan Selected Groups"] = true

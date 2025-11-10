@@ -97,12 +97,14 @@ function private:CreateStartScanContent(parent)
 	frame.Enable = function(self)
 		if self.startGetAllButton then self.startGetAllButton:Enable() end
 		self.startFullScanButton:Enable()
+		if self.startQuickFullScanButton then self.startQuickFullScanButton:Enable() end
 		self.startGroupScanButton:Enable()
 	end
 
 	frame.Disable = function(self)
 		if self.startGetAllButton then self.startGetAllButton:Disable() end
 		self.startFullScanButton:Disable()
+		if self.startQuickFullScanButton then self.startQuickFullScanButton:Disable() end
 		self.startGroupScanButton:Disable()
 	end
 
@@ -178,6 +180,22 @@ function private:CreateStartScanContent(parent)
 	btn:SetText(L["Run Full Scan"])
 	btn.tooltip = L["A full auction house scan will scan every item on the auction house but is far slower than a GetAll scan. Expect this scan to take several minutes or longer."]
 	frame.startFullScanButton = btn
+
+	yOffset = yOffset - 40
+
+	TSMAPI.GUI:CreateHorizontalLine(buttonFrame, yOffset)
+
+	yOffset = yOffset - 20
+
+	-- Row: Quick Full Scan.
+	local quickBtn = TSMAPI.GUI:CreateButton(buttonFrame, 18)
+	quickBtn:SetPoint("TOPLEFT", 6, yOffset)
+	quickBtn:SetPoint("TOPRIGHT", -6, yOffset)
+	quickBtn:SetHeight(22)
+	quickBtn:SetScript("OnClick", TSM.Scan.StartFullQuickScan)
+	quickBtn:SetText(L["Run Quick Full Scan"])
+	quickBtn.tooltip = L["A quick full scan captures only minimum buyout and quantity data for each item. It finishes faster, but market value calculations are not refreshed until a full scan is run."]
+	frame.startQuickFullScanButton = quickBtn
 
 	yOffset = yOffset - 40
 

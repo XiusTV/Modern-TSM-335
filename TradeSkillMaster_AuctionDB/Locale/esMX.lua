@@ -14,6 +14,7 @@ local L = LibStub("AceLocale-3.0"):NewLocale("TradeSkillMaster_AuctionDB", "esMX
 if not L then return end
 
 -- L["A full auction house scan will scan every item on the auction house but is far slower than a GetAll scan. Expect this scan to take several minutes or longer."] = ""
+L["A quick full scan captures only minimum buyout and quantity data for each item. It finishes faster, but market value calculations are not refreshed until a full scan is run."] = true
 -- L["A GetAll scan is the fastest in-game method for scanning every item on the auction house. However, there are many possible bugs on Blizzard's end with it including the chance for it to disconnect you from the game. Also, it has a 15 minute cooldown. You can disable the GetAll button via TSM's AuctionDB options if this feature doesn't work well on your server."] = ""
 -- L["Any items in the AuctionDB database that contain the search phrase in their names will be displayed."] = ""
 -- L["Are you sure you want to clear your AuctionDB data?"] = ""
@@ -71,7 +72,9 @@ if not L then return end
 -- L["Resets AuctionDB's scan data"] = ""
 -- L["Result Order:"] = ""
 -- L["Run Full Scan"] = ""
+L["Run Quick Full Scan"] = true
 -- L["Run GetAll Scan"] = ""
+L["Quick scan complete. Market values will update after a full scan."] = true
 -- L["Running query..."] = ""
 -- L["%s ago"] = ""
 -- L["Scanning page %s/%s"] = ""
