@@ -134,7 +134,7 @@ end
 --    maxPrice - stop scanning when prices go above this price
 function TSMAPI.AuctionScan:RunQuery(query, callbackHandler, resolveSellers, maxPrice, doCache, options)
     options = options or {}
-    TSMAPI.AuctionScan:StopScan() -- stop any scan in progress
+    TSMAPI.AuctionScan:StopScan(options.skipCacheCleanup) -- stop any scan in progress
 
     if not AuctionFrame:IsVisible() then
         return -1 -- the auction house isn't open (return code -1)
@@ -149,6 +149,7 @@ function TSMAPI.AuctionScan:RunQuery(query, callbackHandler, resolveSellers, max
 
     private.quickMode = options.quickMode or false
     private.skipSort = options.skipSort or private.quickMode
+    private.skipCacheCleanup = options.skipCacheCleanup or nil
 
     -- sort by buyout unless disabled
     if not private.skipSort then
@@ -450,8 +451,11 @@ function private:StopScanning()
 		private.cache = nil
 	end
 	
-	-- OPTIMIZED: Clean up old cache entries
-	CleanOldCache()
+	-- OPTIMIZED: Clean up old cache entries (unless explicitly skipped)
+	if not private.skipCacheCleanup then
+		CleanOldCache()
+	end
+	private.skipCacheCleanup = nil
 
 	-- cancel any delays that might still be running
 	TSMAPI:CancelFrame("queryDelay")
@@ -466,7 +470,10 @@ end
 
 -- API for stopping the scan
 -- returns true/false if we were/weren't actually scanning
-function TSMAPI.AuctionScan:StopScan()
+function TSMAPI.AuctionScan:StopScan(skipCacheCleanup)
+	if skipCacheCleanup then
+		private.skipCacheCleanup = true
+	end
 	private:StopScanning()
 	TSM:StopGeneratingQueries()
 end
@@ -595,6 +602,17 @@ function TSMAPI.AuctionScan:FindAuction(callback, targetInfo, useCache)
 	for i = #findPrivate.keys, 1, -1 do
 		if not targetInfo[findPrivate.keys[i]] then
 			tremove(findPrivate.keys, i)
+		end
+	end
+
+	-- If the seller information is unknown, don't require it for cache matching.
+	if targetInfo.seller == "?" then
+		targetInfo.seller = nil
+		for i = #findPrivate.keys, 1, -1 do
+			if findPrivate.keys[i] == "seller" then
+				tremove(findPrivate.keys, i)
+				break
+			end
 		end
 	end
 

@@ -186,7 +186,7 @@ end
 
 function private:PrepareForScan(callback, isLastPageScan)
 	TSMAPI:CancelFrame("shoppingRestartSniper")
-	TSMAPI.AuctionScan:StopScan()
+	TSMAPI.AuctionScan:StopScan(true)
 	private.searchItem = nil
 	private.isLastPageScan = isLastPageScan
 	private.callback = callback
@@ -315,7 +315,7 @@ function private:ScanNextFilter()
 		return private:ScanComplete()
 	end
 	private:UpdateStatus("scan", private.numFilters-#private.filterList, private.numFilters)
-	TSMAPI.AuctionScan:RunQuery(private.filterList[1], private.ScanCallback, true, private.callback("filter", private.filterList[1]), true)
+	TSMAPI.AuctionScan:RunQuery(private.filterList[1], private.ScanCallback, true, private.callback("filter", private.filterList[1]), true, { skipCacheCleanup = true })
 end
 
 local scanStatus, pageStatus
