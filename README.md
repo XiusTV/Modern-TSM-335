@@ -1,8 +1,10 @@
+### Support: [Buy Me A Coffee](https://buymeacoffee.com/xius)
+
 **Other WotLK 3.3.5 Addons by XiusTV:**
 
 * [ElvUI VibeUI](https://github.com/XiusTV/Elvui-VibeUI) - Modern ElvUI configuration
 * [Modern TSM](https://github.com/XiusTV/Modern-TSM-335) - Performance-optimized TradeSkillMaster
-* [PFQuestie](https://github.com/XiusTV/PFQuestie) - Rework of Pfquest and Questie integrated into one coming soon
+* [PFQuestie](https://github.com/XiusTV/PFQuestie) - Rework of Pfquest and Questie integrated together!
 
 # Modern TradeSkillMaster (WotLK 3.3.5)
 
