@@ -6,6 +6,8 @@
 * [Modern TSM](https://github.com/XiusTV/Modern-TSM-335) - Performance-optimized TradeSkillMaster
 * [PFQuestie](https://github.com/XiusTV/PFQuestie) - Rework of Pfquest and Questie integrated together!
 
+Interact with me on discord @ https://discord.gg/neEqeFFUsE for help related to all my addons!
+
 # Modern TradeSkillMaster (WotLK 3.3.5)
 
 A refreshed presentation of TradeSkillMaster 2.x for Wrath of the Lich King realms. This fork keeps the classic module set intact while delivering a modern layout, richer dashboards, and streamlined navigation inspired by contemporary TSM releases.
