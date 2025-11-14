@@ -111,6 +111,7 @@ function Data:GetBagData(state)
 		end
 	end
 	TSM.characters[TSM.CURRENT_PLAYER].lastUpdate.bags = time()
+	TSMAPI:InvalidateTooltipCache()
 	TSM.Sync:BroadcastUpdateRequest()
 end
 
@@ -125,6 +126,7 @@ function Data:GetBankData(state)
 		end
 	end
 	TSM.characters[TSM.CURRENT_PLAYER].lastUpdate.bank = time()
+	TSMAPI:InvalidateTooltipCache()
 	TSM.Sync:BroadcastUpdateRequest()
 end
 
@@ -154,6 +156,7 @@ function Data:GetGuildBankData()
 	if GuildBankFrame and GuildBankFrame:IsVisible() then
 		TSM.guilds[TSM.CURRENT_GUILD].lastUpdate = time()
 	end
+	TSMAPI:InvalidateTooltipCache()
 	TSM.Sync:BroadcastUpdateRequest()
 end
 
@@ -175,6 +178,7 @@ function Data:ScanPlayerAuctions()
 		end
 	end
 	TSM.characters[TSM.CURRENT_PLAYER].lastUpdate.auctions = time()
+	TSMAPI:InvalidateTooltipCache()
 	TSM.Sync:BroadcastUpdateRequest()
 end
 
@@ -204,6 +208,7 @@ local function UpdateMailQuantitiesThread(self)
 					self:Yield()
 				end
 				TSM.characters[player].lastUpdate.mail = time()
+				TSMAPI:InvalidateTooltipCache()
 				TSM.Sync:BroadcastUpdateRequest()
 			end
 		else

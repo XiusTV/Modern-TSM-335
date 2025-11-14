@@ -11,14 +11,56 @@ local Options = TSM:NewModule("Options", "AceEvent-3.0")
 local AceGUI = LibStub("AceGUI-3.0")
 local L = LibStub("AceLocale-3.0"):GetLocale("TradeSkillMaster_Mailing") -- loads the localization table
 
-function Options:Load(parent, operation, group)
+local function GetOperationList()
+	local names = {}
+	for name in pairs(TSM.operations) do
+		tinsert(names, name)
+	end
+	return names
+end
+
+function Options:UpdateTree()
+	if Options.treeContext then
+		Options.treeContext:RefreshTree()
+	elseif LegacyUpdateTree then
+		LegacyUpdateTree()
+	end
+end
+
+local function LegacyUpdateTree()
+	if not Options.treeGroup then return end
+
+	local operationTreeChildren = {}
+	for name in pairs(TSM.operations) do
+		tinsert(operationTreeChildren, { value = name, text = name })
+	end
+	sort(operationTreeChildren, function(a, b) return a.value < b.value end)
+
+	Options.treeGroup:SetTree({ { value = 1, text = L["Options"] }, { value = 2, text = L["Operations"], children = operationTreeChildren } })
+end
+
+local function LegacySelectTree(treeGroup, _, selection)
+	treeGroup:ReleaseChildren()
+
+	local major, minor = ("\001"):split(selection)
+	major = tonumber(major)
+	if major == 1 then
+		Options:LoadGeneralSettings(treeGroup)
+	elseif minor then
+		Options:DrawOperationSettings(treeGroup, minor)
+	else
+		Options:DrawNewOperation(treeGroup)
+	end
+end
+
+function Options:LegacyLoad(parent, operation, group)
 	Options.treeGroup = AceGUI:Create("TSMTreeGroup")
 	Options.treeGroup:SetLayout("Fill")
-	Options.treeGroup:SetCallback("OnGroupSelected", function(...) Options:SelectTree(...) end)
+	Options.treeGroup:SetCallback("OnGroupSelected", function(...) LegacySelectTree(...) end)
 	Options.treeGroup:SetStatusTable(TSM.db.global.optionsTreeStatus)
 	parent:AddChild(Options.treeGroup)
 
-	Options:UpdateTree()
+	LegacyUpdateTree()
 	if operation then
 		if operation == "" then
 			Options.currentGroup = group
@@ -32,29 +74,51 @@ function Options:Load(parent, operation, group)
 	end
 end
 
-function Options:UpdateTree()
-	local operationTreeChildren = {}
-
-	for name in pairs(TSM.operations) do
-		tinsert(operationTreeChildren, { value = name, text = name })
+function Options:Load(parent, operation, group)
+	if not (TSMAPI and TSMAPI.OptionsFramework) then
+		return Options:LegacyLoad(parent, operation, group)
 	end
-	
-	sort(operationTreeChildren, function(a, b) return a.value < b.value end)
+	local initialSelection = { 1 }
+	local selectingNewOperation = false
 
-	Options.treeGroup:SetTree({ { value = 1, text = L["Options"] }, { value = 2, text = L["Operations"], children = operationTreeChildren } })
-end
+	if operation then
+		if operation == "" then
+			initialSelection = { 2 }
+			selectingNewOperation = true
+			Options.currentGroup = group
+		else
+			initialSelection = { 2, operation }
+		end
+	end
 
-function Options:SelectTree(treeGroup, _, selection)
-	treeGroup:ReleaseChildren()
+	Options.treeContext = TSMAPI.OptionsFramework.CreateTree(parent, {
+		statusTable = TSM.db.global.optionsTreeStatus,
+		initialSelection = initialSelection,
+		nodes = {
+			{
+				value = 1,
+				text = L["Options"],
+				draw = function(container) Options:LoadGeneralSettings(container) end,
+			},
+			{
+				value = 2,
+				text = L["Operations"],
+				type = "operations",
+				getChildren = GetOperationList,
+				drawOperation = function(container, operationName)
+					Options:DrawOperationSettings(container, operationName)
+				end,
+				drawNew = function(container)
+					Options:DrawNewOperation(container)
+				end,
+			},
+		},
+	})
 
-	local major, minor = ("\001"):split(selection)
-	major = tonumber(major)
-	if major == 1 then
-		Options:LoadGeneralSettings(treeGroup)
-	elseif minor then
-		Options:DrawOperationSettings(treeGroup, minor)
-	else
-		Options:DrawNewOperation(treeGroup)
+	Options.treeGroup = Options.treeContext.treeGroup
+
+	if selectingNewOperation then
+		Options.currentGroup = nil
 	end
 end
 
@@ -88,9 +152,15 @@ function Options:DrawNewOperation(container)
 									return TSM:Printf(L["Error creating operation. Operation with name '%s' already exists."], name)
 								end
 								TSM.operations[name] = CopyTable(TSM.operationDefaults)
-								Options:UpdateTree()
-								Options.treeGroup:SelectByPath(2, name)
+								if Options.treeContext then
+									Options.treeContext:RefreshTree()
+									Options.treeContext:SelectPath(2, name)
+								elseif Options.treeGroup then
+									LegacyUpdateTree()
+									Options.treeGroup:SelectByPath(2, name)
+								end
 								TSMAPI:NewOperationCallback("Mailing", currentGroup, name)
+								Options.currentGroup = nil
 							end,
 							tooltip = L["Give the new operation a name. A descriptive name will help you find this operation later."],
 						},
@@ -126,6 +196,11 @@ end
 
 function Options:DrawOperationGeneral(container, operationName)
 	local operationSettings = TSM.operations[operationName]
+	if not operationSettings then
+		TSM:Printf(L["Operation '%s' is no longer available."], tostring(operationName))
+		Options:UpdateTree()
+		return
+	end
 	
 	local page = {
 		{
@@ -166,7 +241,13 @@ function Options:DrawOperationGeneral(container, operationName)
 							label = L["Set Max Quantity"],
 							settingInfo = {operationSettings, "maxQtyEnabled"},
 							disabled = operationSettings.relationships.maxQtyEnabled,
-							callback = function() Options.treeGroup:SelectByPath(2, operationName) end,
+							callback = function()
+								if Options.treeContext then
+									Options.treeContext:SelectPath(2, operationName)
+								elseif Options.treeGroup then
+									Options.treeGroup:SelectByPath(2, operationName)
+								end
+							end,
 							tooltip = L["If checked, a maximum quantity to send to the target can be set. Otherwise, Mailing will send as many as it can."],
 						},
 						{
@@ -185,7 +266,13 @@ function Options:DrawOperationGeneral(container, operationName)
 							label = L["Restock Target to Max Quantity"],
 							settingInfo = {operationSettings, "restock"},
 							disabled = not operationSettings.maxQtyEnabled or operationSettings.relationships.restock,
-							callback = function() Options.treeGroup:SelectByPath(2, operationName) end,
+							callback = function()
+								if Options.treeContext then
+									Options.treeContext:SelectPath(2, operationName)
+								elseif Options.treeGroup then
+									Options.treeGroup:SelectByPath(2, operationName)
+								end
+							end,
 							tooltip = L["If checked, the target's current inventory will be taken into account when determing how many to send. For example, if the max quantity is set to 10, and the target already has 3, Mailing will send at most 7 items."],
 						},
 						{
@@ -204,6 +291,11 @@ function Options:DrawOperationGeneral(container, operationName)
 end
 
 function Options:DrawOperationRelationships(container, operationName)
+	local operation = TSM.operations[operationName]
+	if not operation then
+		Options:UpdateTree()
+		return
+	end
 	local settingInfo = {
 		{
 			label = L["General Settings"],
@@ -215,7 +307,7 @@ function Options:DrawOperationRelationships(container, operationName)
 			{key="restockGBank", label=L["Include Guild Bank in Restock"]},
 		},
 	}
-	TSMAPI:ShowOperationRelationshipTab(TSM, container, TSM.operations[operationName], settingInfo)
+	TSMAPI:ShowOperationRelationshipTab(TSM, container, operation, settingInfo)
 end
 
 function Options:LoadGeneralSettings(container)

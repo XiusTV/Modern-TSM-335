@@ -119,6 +119,14 @@
 		local crafterBags = TSMAPI:ModuleAPI("ItemTracker", "playerbags", crafter) or {}	
 		local crafterMail = TSMAPI:ModuleAPI("ItemTracker", "playermail", crafter) or {}	
 		local crafterBank = TSMAPI:ModuleAPI("ItemTracker", "playerbank", crafter) or {}	
+	local totalQtyCache = {}
+	local function GetCachedQuantity(itemString)
+		if not itemString then return 0 end
+		if totalQtyCache[itemString] == nil then
+			totalQtyCache[itemString] = Inventory:GetTotalQuantity(itemString)
+		end
+		return totalQtyCache[itemString]
+	end
 		
 		-- add vendor items	
 		local task = {}	
@@ -132,13 +140,15 @@
 			elseif TSMAPI.Conversions[itemString] and TSMAPI.InkConversions[itemString] then	
 				local tradeItem, data = next(TSMAPI.Conversions[itemString])	
 				if data.source == "vendortrade" then	
-					local num = floor(Inventory:GetTotalQuantity(tradeItem) * data.rate)	
-					if quantity > Inventory:GetTotalQuantity(itemString) and num >= (quantity - Inventory:GetTotalQuantity(itemString)) then	
-						items[itemString] = quantity - Inventory:GetTotalQuantity(itemString)	
-						neededMats[tradeItem] = (neededMats[tradeItem] or 0) + quantity / data.rate -- add the qty of IOD to needed mats	
-					end	
-				end	
-			end	
+					local tradeItemQty = GetCachedQuantity(tradeItem)
+					local itemQty = GetCachedQuantity(itemString)
+					local num = floor(tradeItemQty * data.rate)	
+					if quantity > itemQty and num >= (quantity - itemQty) then	
+						items[itemString] = quantity - itemQty
+						neededMats[tradeItem] = (neededMats[tradeItem] or 0) + quantity / data.rate -- add the qty of IOD to needed mats
+					end
+				end
+			end
 		end	
 		if next(items) then	
 			tinsert(task, { taskType = L["Visit Vendor"], items = items })	
@@ -237,7 +247,7 @@
 				if TSM.Inventory.gatherItem == itemString and TSM.Inventory.gatherQuantity then	
 					need = TSM.Inventory.gatherQuantity	
 				else	
-					need = max(quantity - (TSM.Inventory:GetTotalQuantity(itemString) or 0), 0)	
+					need = max(quantity - GetCachedQuantity(itemString), 0)	
 				end	
 				if need > 0 then	
 					auctionItems[itemString] = need	
@@ -253,7 +263,7 @@
 		local destroyingTask, millItems, prospectItems, transformItems, deItems = {}, {}, {}, {}, {}	
 		
 		for itemString, quantity in pairs(neededMats) do	
-			local need = max(quantity - (TSM.Inventory:GetTotalQuantity(itemString) or 0), 0)	
+			local need = max(quantity - GetCachedQuantity(itemString), 0)	
 			-- conversion items	
 			for destroyItem, data in pairs(TSMAPI.Conversions[itemString] or {}) do	
 				if TSM.db.realm.gathering.destroyingMats[destroyItem] then	

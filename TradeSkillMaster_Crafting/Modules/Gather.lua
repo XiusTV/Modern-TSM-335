@@ -12,7 +12,22 @@ local Gather = TSM:NewModule("Gather", "AceEvent-3.0")
 local L = LibStub("AceLocale-3.0"):GetLocale("TradeSkillMaster_Crafting") -- loads the localization table
 
 local next = next
-local private = { shoppingItems = {} }
+local private = { shoppingItems = {}, itemNameCache = {} }
+
+local function GetSearchItemName(itemString)
+	if not private.itemNameCache[itemString] then
+		private.itemNameCache[itemString] = TSMAPI:GetSafeItemInfo(itemString) or itemString
+	end
+	return private.itemNameCache[itemString]
+end
+
+local function BuildSearchQuery(itemString, suffix, need, ignoreMaxQty)
+	local query = GetSearchItemName(itemString) .. (suffix or "")
+	if not ignoreMaxQty and need then
+		query = query .. "/x" .. need
+	end
+	return query
+end
 
 function Gather:BuyFromMerchant(neededMats)
 	for i = 1, GetMerchantNumItems() do
@@ -101,7 +116,7 @@ end
 local function ShoppingCallback(remainingQty, boughtItem, stackSize)
 	if not boughtItem then
 		if next(private.shoppingItems) then
-			local name = TSMAPI:GetSafeItemInfo(private.shoppingItems[1].itemString)
+			local name = GetSearchItemName(private.shoppingItems[1].itemString)
 			TSM:Print("No Auctions found for", name)
 			tremove(private.shoppingItems, 1)
 			TSMAPI:CreateTimeDelay("shoppingSearchThrottle", 0.5, ShoppingNextSearch)
@@ -122,30 +137,23 @@ local function ShoppingCallback(remainingQty, boughtItem, stackSize)
 	end
 end
 
+local function RunShoppingQuery(method, itemString, suffix, need, ignoreMaxQty)
+	TSMAPI:ModuleAPI("Shopping", method, BuildSearchQuery(itemString, suffix, need, ignoreMaxQty), ShoppingCallback)
+end
+
 function Gather:ShoppingSearch(itemString, need, ignoreMaxQty)
 	TSM.Inventory.gatherQuantity = nil
-	local matPrice = TSMAPI:FormatTextMoney(TSM.Cost:GetMatCost(itemString))
 	if not TSM.db.realm.gathering.destroyDisable then
 		if TSMAPI.InkConversions[itemString] then
 			TSM.Inventory.gatherItem = itemString
 			if TSM.db.realm.gathering.evenStacks then
-				if ignoreMaxQty then
-					TSMAPI:ModuleAPI("Shopping", "runDestroySearch", TSMAPI:GetSafeItemInfo(itemString) .. "/even", ShoppingCallback)
-				else
-					TSMAPI:ModuleAPI("Shopping", "runDestroySearch", TSMAPI:GetSafeItemInfo(itemString) .. "/even/x" .. need, ShoppingCallback)
-				end
-			elseif ignoreMaxQty then
-				TSMAPI:ModuleAPI("Shopping", "runDestroySearch", TSMAPI:GetSafeItemInfo(itemString), ShoppingCallback)
+				RunShoppingQuery("runDestroySearch", itemString, "/even", need, ignoreMaxQty)
 			else
-				TSMAPI:ModuleAPI("Shopping", "runDestroySearch", TSMAPI:GetSafeItemInfo(itemString) .. "/x" .. need, ShoppingCallback)
+				RunShoppingQuery("runDestroySearch", itemString, "", need, ignoreMaxQty)
 			end
 		elseif TSMAPI:GetDisenchantData(itemString) then
 			TSM.Inventory.gatherItem = itemString
-			if ignoreMaxQty then
-				TSMAPI:ModuleAPI("Shopping", "runDestroySearch", TSMAPI:GetSafeItemInfo(itemString) .. "/exact", ShoppingCallback)
-			else
-				TSMAPI:ModuleAPI("Shopping", "runDestroySearch", TSMAPI:GetSafeItemInfo(itemString) .. "/exact/x" .. need, ShoppingCallback)
-			end
+			RunShoppingQuery("runDestroySearch", itemString, "/exact", need, ignoreMaxQty)
 		elseif TSMAPI.Conversions[itemString] then
 			TSM.Inventory.gatherItem = itemString
 			local convertSource
@@ -155,34 +163,20 @@ function Gather:ShoppingSearch(itemString, need, ignoreMaxQty)
 			end
 			if convertSource == "mill" or convertSource == "prospect" then
 				if TSM.db.realm.gathering.evenStacks then
-					if ignoreMaxQty then
-						TSMAPI:ModuleAPI("Shopping", "runDestroySearch", TSMAPI:GetSafeItemInfo(itemString) .. "/even", ShoppingCallback)
-					else
-						TSMAPI:ModuleAPI("Shopping", "runDestroySearch", TSMAPI:GetSafeItemInfo(itemString) .. "/even/x" .. need, ShoppingCallback)
-					end
-				elseif ignoreMaxQty then
-					TSMAPI:ModuleAPI("Shopping", "runDestroySearch", TSMAPI:GetSafeItemInfo(itemString), ShoppingCallback)
+					RunShoppingQuery("runDestroySearch", itemString, "/even", need, ignoreMaxQty)
 				else
-					TSMAPI:ModuleAPI("Shopping", "runDestroySearch", TSMAPI:GetSafeItemInfo(itemString) .. "/x" .. need, ShoppingCallback)
+					RunShoppingQuery("runDestroySearch", itemString, "", need, ignoreMaxQty)
 				end
 			else
-				TSMAPI:ModuleAPI("Shopping", "runSearch", TSMAPI:GetSafeItemInfo(itemString) .. "/exact/x" .. need, ShoppingCallback)
+				RunShoppingQuery("runSearch", itemString, "/exact", need, ignoreMaxQty)
 			end
 		else
 			TSM.Inventory.gatherItem = nil
-			if ignoreMaxQty then
-				TSMAPI:ModuleAPI("Shopping", "runSearch", TSMAPI:GetSafeItemInfo(itemString) .. "/exact", ShoppingCallback)
-			else
-				TSMAPI:ModuleAPI("Shopping", "runSearch", TSMAPI:GetSafeItemInfo(itemString) .. "/exact/x" .. need, ShoppingCallback)
-			end
+			RunShoppingQuery("runSearch", itemString, "/exact", need, ignoreMaxQty)
 		end
 
 	else
 		TSM.Inventory.gatherItem = nil
-		if ignoreMaxQty then
-			TSMAPI:ModuleAPI("Shopping", "runSearch", TSMAPI:GetSafeItemInfo(itemString) .. "/exact", ShoppingCallback)
-		else
-			TSMAPI:ModuleAPI("Shopping", "runSearch", TSMAPI:GetSafeItemInfo(itemString) .. "/exact/x" .. need, ShoppingCallback)
-		end
+		RunShoppingQuery("runSearch", itemString, "/exact", need, ignoreMaxQty)
 	end
 end

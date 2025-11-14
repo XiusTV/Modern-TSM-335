@@ -41,29 +41,110 @@ function TSM:SetupTooltips()
 	end
 end
 
-local tooltipLines = {lastUpdate = 0, modifier=0}
+-- Per-module tooltip cache with dirty tracking
+local moduleCache = {}
+local cacheVersion = 0
+
+-- Invalidate all tooltip caches (call when module data changes)
+function TSMAPI:InvalidateTooltipCache()
+	cacheVersion = cacheVersion + 1
+end
+
+-- Per-item/modifier cache entry
+local tooltipCache = {}
+local function GetCacheKey(itemString, quantity, modifier)
+	return format("%s:%d:%d", itemString or "", quantity or 0, modifier or 0)
+end
+
 local function GetTooltipLines(itemString, quantity)
 	local modifier = (IsShiftKeyDown() and 4 or 0) + (IsAltKeyDown() and 2 or 0) + (IsControlKeyDown() and 1 or 0)
-	if modifier ~= tooltipLines.modifier then
-		tooltipLines.modifier = modifier
-		tooltipLines.lastUpdate = 0
+	local cacheKey = GetCacheKey(itemString, quantity, modifier)
+	local cached = tooltipCache[cacheKey]
+	
+	-- Check if cache is valid (same item/quantity/modifier and not expired)
+	if cached and cached.version == cacheVersion and (GetTime() - cached.timestamp) < 5.0 then
+		return cached.lines
 	end
-	if tooltipLines.itemString ~= itemString or tooltipLines.quantity ~= quantity or (tooltipLines.lastUpdate + 0.5) < GetTime() then
-		wipe(tooltipLines)
-		for _, moduleName in ipairs(moduleNames) do
-			if moduleObjects[moduleName].GetTooltip then
-				local moduleLines = moduleObjects[moduleName]:GetTooltip(itemString, quantity)
-				if type(moduleLines) ~= "table" then moduleLines = {} end
-				for _, line in ipairs(moduleLines) do
-					tinsert(tooltipLines, line)
+	
+	-- Build tooltip lines, checking per-module cache first
+	local result = {}
+	for _, moduleName in ipairs(moduleNames) do
+		if moduleObjects[moduleName].GetTooltip then
+			-- Check module-specific cache
+			local moduleKey = format("%s:%s:%d:%d", moduleName, itemString or "", quantity or 0, modifier or 0)
+			local moduleCached = moduleCache[moduleKey]
+			
+			local moduleLines
+			if moduleCached and moduleCached.version == cacheVersion and (GetTime() - moduleCached.timestamp) < 5.0 then
+				moduleLines = moduleCached.lines
+			else
+				-- Call module's GetTooltip
+				moduleLines = moduleObjects[moduleName]:GetTooltip(itemString, quantity)
+				if type(moduleLines) ~= "table" then
+					moduleLines = {}
 				end
+				-- Cache module result
+				moduleCache[moduleKey] = {
+					lines = moduleLines,
+					version = cacheVersion,
+					timestamp = GetTime()
+				}
+			end
+			
+			-- Append module lines to result
+			for _, line in ipairs(moduleLines) do
+				tinsert(result, line)
 			end
 		end
-		tooltipLines.itemString = itemString
-		tooltipLines.quantity = quantity
-		tooltipLines.lastUpdate = GetTime()
 	end
-	return tooltipLines
+	
+	-- Cache the combined result
+	tooltipCache[cacheKey] = {
+		lines = result,
+		version = cacheVersion,
+		timestamp = GetTime()
+	}
+	
+	-- Cleanup old cache entries (keep last 50 entries)
+	local cacheCount = 0
+	for _ in pairs(tooltipCache) do
+		cacheCount = cacheCount + 1
+	end
+	if cacheCount > 50 then
+		-- Remove oldest entries
+		local oldest = math.huge
+		local oldestKey = nil
+		for key, data in pairs(tooltipCache) do
+			if data.timestamp < oldest then
+				oldest = data.timestamp
+				oldestKey = key
+			end
+		end
+		if oldestKey then
+			tooltipCache[oldestKey] = nil
+		end
+	end
+	
+	-- Cleanup old module cache entries (keep last 100 entries)
+	local moduleCacheCount = 0
+	for _ in pairs(moduleCache) do
+		moduleCacheCount = moduleCacheCount + 1
+	end
+	if moduleCacheCount > 100 then
+		local oldest = math.huge
+		local oldestKey = nil
+		for key, data in pairs(moduleCache) do
+			if data.timestamp < oldest then
+				oldest = data.timestamp
+				oldestKey = key
+			end
+		end
+		if oldestKey then
+			moduleCache[oldestKey] = nil
+		end
+	end
+	
+	return result
 end
 
 function private.LoadTooltip(tipFrame, link, quantity)

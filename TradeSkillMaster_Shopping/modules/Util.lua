@@ -9,7 +9,7 @@
 local TSM = select(2, ...)
 local Util = TSM:NewModule("Util", "AceEvent-3.0", "AceHook-3.0")
 local L = LibStub("AceLocale-3.0"):GetLocale("TradeSkillMaster_Shopping") -- loads the localization table
-local private = {auctions={}}
+local private = { auctions = {}, rtData = {} }
 TSMAPI:RegisterForTracing(private, "TradeSkillMaster_Shopping_private")
 Util.shoppingLog = {}
 
@@ -100,12 +100,12 @@ function private:CreateSearchFrame()
 	
 	local rt = TSMAPI:CreateAuctionResultsTable(frame, handlers, true)
 	rt:SetData({})
-	rt:SetSort(8, true)
+	rt:SetSort(7, true)
 	frame.rtNormal = rt
 	
 	local rt2 = TSMAPI:CreateAuctionResultsTable(frame, handlers, true, true)
 	rt2:SetData({})
-	rt2:SetSort(5, true)
+	rt2:SetSort(6, true)
 	frame.rtDestroying = rt2
 	
 	return frame
@@ -196,7 +196,7 @@ function private:PrepareForScan(callback, isLastPageScan)
 	else
 		private.searchFrame.statusBar:SetStatusText(L["Preparing filters..."])
 	end
-	private.searchFrame.rt:SetData({})
+	private:UpdateRT(true)
 	private.searchFrame.rt:SetDisabled(true)
 	private.searchFrame.statusBar:UpdateStatus(0, 0)
 	TSM.moduleAPICallback = nil
@@ -434,12 +434,28 @@ function private:ProcessItem(itemString, auctionItem)
 	private.auctions[itemString] = auctionItem
 end
 
-function private:UpdateRT()
-	local rtData = {}
+local function DoRTUpdate()
+	private.rtUpdatePending = nil
+	wipe(private.rtData)
 	for _, obj in pairs(private.auctions) do
-		tinsert(rtData, obj)
+		private.rtData[#private.rtData + 1] = obj
 	end
-	private.searchFrame.rt:SetData(rtData)
+	if private.searchFrame and private.searchFrame.rt then
+		private.searchFrame.rt:SetData(private.rtData)
+	end
+end
+
+function private:UpdateRT(force)
+	if force then
+		if private.rtUpdatePending then
+			TSMAPI:CancelFrame("shoppingUpdateRT")
+			private.rtUpdatePending = nil
+		end
+		return DoRTUpdate()
+	end
+	if private.rtUpdatePending then return end
+	private.rtUpdatePending = true
+	TSMAPI:CreateTimeDelay("shoppingUpdateRT", 0, DoRTUpdate)
 end
 
 function private:RemoveAuction(auction, event, itemString)

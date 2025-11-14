@@ -200,6 +200,7 @@ function private:InsertItemRecord(itemString, dataType, newRecord)
 	end
 	tinsert(TSM.items[itemString][dataType], newRecord)
 	TSM.cache[itemString] = {}
+	TSMAPI:InvalidateTooltipCache()
 	-- keep the records sorted by time
 	sort(TSM.items[itemString][dataType], function(a, b) return (a.time or 0) < (b.time or 0) end)
 end

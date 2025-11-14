@@ -90,12 +90,14 @@ function Queue:HasLoop(itemString, steps, visited)
 		local spellID = TSM.Cost:GetLowestCraftPrices(itemString, true)
 		if spellID and TSM.db.realm.crafts[spellID] then
 			for matItemString in pairs(TSM.db.realm.crafts[spellID].mats) do
-				if Queue:HasLoop(matItemString, steps, CopyTable(visited)) then
+				if Queue:HasLoop(matItemString, steps, visited) then
+					visited[itemString] = nil
 					return true
 				end
 			end
 		end
 	end
+	visited[itemString] = nil
 end
 
 function Queue:GetIntermediateCrafts(mats, usedItems, usedMats, tempMats)

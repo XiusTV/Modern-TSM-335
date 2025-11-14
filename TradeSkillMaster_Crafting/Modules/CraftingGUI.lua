@@ -13,6 +13,13 @@ local L = LibStub("AceLocale-3.0"):GetLocale("TradeSkillMaster_Crafting") -- loa
 
 local priceTextCache = { lastClear = 0 }
 local private = {}
+
+local function CopyInto(dest, src)
+	wipe(dest)
+	for k, v in pairs(src) do
+		dest[k] = v
+	end
+end
 private.gather = {}
 private.shown = {}
 
@@ -2393,7 +2400,8 @@ function GUI:UpdateGathering()
 		end
 		return
 	else
-		TSM.db.realm.gathering.neededMats = CopyTable(neededMats)
+		TSM.db.realm.gathering.neededMats = TSM.db.realm.gathering.neededMats or {}
+		CopyInto(TSM.db.realm.gathering.neededMats, neededMats)
 	end
 
 	sort(professionList)
@@ -2600,7 +2608,8 @@ function GUI:UpdateGathering()
 		end
 	end
 	-- store the available mats from source
-	TSM.db.realm.gathering.availableMats = CopyTable(availableMats)
+	TSM.db.realm.gathering.availableMats = TSM.db.realm.gathering.availableMats or {}
+	CopyInto(TSM.db.realm.gathering.availableMats, availableMats)
 
 	GUI.gatheringFrame.gatherButton:SetText(L["Gather Items"])
 	if next(stData) then
