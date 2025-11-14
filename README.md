@@ -49,6 +49,14 @@ Each module retains the familiar functionality from the 2.x era while benefiting
 - `/tsm dashboard` – jump straight to the gold dashboard & analytics views.
 - `/tsm scan` – begin an AuctionDB scan (same behavior as legacy TSM).
 
+## Screenshots
+
+<img width="1498" height="660" alt="image" src="https://github.com/user-attachments/assets/f416b000-13ea-432c-b633-96c18613952b" />
+<img width="1448" height="844" alt="image" src="https://github.com/user-attachments/assets/0db72e9a-31dd-4c6a-89ab-b3728c7bacc3" />
+<img width="1461" height="838" alt="image" src="https://github.com/user-attachments/assets/5fa1a900-0c79-4591-8013-bf6283dfab05" />
+
+
+
 ## Support & Feedback
 
 This modernization is maintained by **XiusTV**. For questions, suggestions, or issue reports:
