@@ -19,7 +19,7 @@ A refreshed presentation of TradeSkillMaster 2.x for Wrath of the Lich King real
 - **Dashboards & Analytics** – gold tracking, sales/expense overlays, and accounting insights available inside the core addon.
 - **Full Module Suite** – Accounting, AuctionDB, Auctioning, Crafting, Destroying, ItemTracker, Mailing, Shopping, and Warehousing are bundled and kept in sync.
 - **Phase Documentation & Tests** – source includes the full modernization notes, implementation guides, and Lua test harnesses used during the port.
-- **Drop-In Compatible** – runs on any 3.3.5a environment (Ascension, Warmane, etc.) without breaking existing TSM data or profiles.
+- **Built off Ascension's TSM** – Compatibility for other 3.3.5 private servers coming soon.
 
 ## Installation
 
