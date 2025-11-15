@@ -20,6 +20,32 @@ local scanCache = {}
 local cacheAccessOrder = {}  -- OPTIMIZED: LRU tracking for cache management
 local MAX_CACHE_SIZE = 100  -- OPTIMIZED: Limit cache entries to prevent memory bloat
 
+local recordPool = {}
+
+local function AcquireRow()
+	local row = tremove(recordPool)
+	if not row then
+		row = {}
+	end
+	return row
+end
+
+local function ReleaseRow(row)
+	wipe(row)
+	tinsert(recordPool, row)
+end
+
+function private:RecyclePageRows()
+	if not private.pageAuctions then return end
+	for i = #private.pageAuctions, 1, -1 do
+		local row = private.pageAuctions[i]
+		if row then
+			ReleaseRow(row)
+			private.pageAuctions[i] = nil
+		end
+	end
+end
+
 local CACHE_DECAY_PER_DAY = 5
 local CACHE_AUTO_HIT_TIME = 10 * 60
 local SECONDS_PER_DAY = 60 * 60 * 24
@@ -54,7 +80,9 @@ end
 function private:ScanAuctionPage(resolveSellers)
 	local shown = GetNumAuctionItems("list")
 	local badData = false
-	local auctions = {}
+	private.pageAuctions = private.pageAuctions or {}
+	private:RecyclePageRows()
+	local auctions = private.pageAuctions
 
 	for i = 1, shown do
 		-- checks to make sure all the data has been sent to the client
@@ -64,11 +92,21 @@ function private:ScanAuctionPage(resolveSellers)
 		local itemString = link and TSMAPI:GetItemString(link)
 		local hasSellerInfo = private.quickMode or seller or not resolveSellers or buyout == 0
 
+		local row = AcquireRow()
 		if private.quickMode then
 			local itemID = itemString and tonumber(itemString:match("item:(%d+)"))
-			auctions[i] = { itemID = itemID, count = count or 0, minBid = minBid or bid, buyout = buyout }
+			row.itemID = itemID
+			row.count = count or 0
+			row.minBid = minBid or bid
+			row.buyout = buyout
+			auctions[i] = row
 		else
-			auctions[i] = { itemString = itemString, index = i, count = count, buyout = buyout, seller = seller }
+			row.itemString = itemString
+			row.index = i
+			row.count = count
+			row.buyout = buyout
+			row.seller = seller
+			auctions[i] = row
 		end
 
 		if not (itemString and count and hasSellerInfo and (buyout or minBid)) then
@@ -350,6 +388,8 @@ function private:ScanAuctions()
         end
     end
 
+	private:RecyclePageRows()
+
 	if private.scanType == "lastPage" then
 		return DoCallback("SCAN_LAST_PAGE_COMPLETE", private.data)
     elseif private.query.page >= totalPages then
@@ -589,16 +629,15 @@ local function IsTargetAuction(index)
 	-- local _, _, count, _, _, _, _, minBid, bidIncrement, buyout, bidAmount, _, _, seller, seller_full = GetAuctionItemInfo("list", index)
 	local _, _, count, _, _, _,  minBid, bidIncrement, buyout, bidAmount, _, _, seller = GetAuctionItemInfo("list", index)
 	seller = TSM:GetAuctionPlayer(seller, nil)
-	local bid = bidAmount == 0 and minBid or bidAmount
-	local tmp = { itemString = itemString, count = count, bid = bid, buyout = buyout, seller = seller }
+	local tmp = { itemString = itemString, count = count, buyout = buyout, seller = seller }
 	return CompareTableKeys(tmp, findPrivate.targetInfo)
 end
 
--- valid targetInfo keys: itemString, count, bid, buyout, seller
+-- valid targetInfo keys: itemString, count, buyout, seller
 function TSMAPI.AuctionScan:FindAuction(callback, targetInfo, useCache)
 	if findPrivate.isScanning then TSMAPI.AuctionScan:StopFindScan() end
 
-	findPrivate.keys = { "itemString", "count", "bid", "buyout", "seller" }
+	findPrivate.keys = { "itemString", "count", "buyout", "seller" }
 	for i = #findPrivate.keys, 1, -1 do
 		if not targetInfo[findPrivate.keys[i]] then
 			tremove(findPrivate.keys, i)

@@ -57,14 +57,46 @@ local function DeleteOperation(name)
 	TSM.operations[name] = nil
 end
 
-function Options:Load(parent, operation, group)
+local function GetOperationList()
+	local operationNames = {}
+	for name in pairs(TSM.operations) do
+		tinsert(operationNames, name)
+	end
+	return operationNames
+end
+
+local function LegacyUpdateTree()
+	if not Options.treeGroup then return end
+	local operationTreeChildren = {}
+	for name in pairs(TSM.operations) do
+		tinsert(operationTreeChildren, { value = name, text = name })
+	end
+	sort(operationTreeChildren, function(a, b) return a.value < b.value end)
+	Options.treeGroup:SetTree({ { value = 1, text = L["Help"] }, { value = 2, text = L["Operations"], children = operationTreeChildren } })
+end
+
+local function LegacySelectTree(treeGroup, _, selection)
+	treeGroup:ReleaseChildren()
+
+	local major, minor = ("\001"):split(selection)
+	major = tonumber(major)
+	if major == 1 then
+		Options:DrawHelp(treeGroup)
+	elseif minor then
+		Options:DrawOperationSettings(treeGroup, minor)
+	else
+		Options:DrawNewOperation(treeGroup)
+	end
+end
+
+function Options:LegacyLoad(parent, operation, group)
 	Options.treeGroup = AceGUI:Create("TSMTreeGroup")
 	Options.treeGroup:SetLayout("Fill")
-	Options.treeGroup:SetCallback("OnGroupSelected", function(...) Options:SelectTree(...) end)
+	Options.treeGroup:SetCallback("OnGroupSelected", function(...) LegacySelectTree(...) end)
 	Options.treeGroup:SetStatusTable(TSM.db.global.optionsTreeStatus)
 	parent:AddChild(Options.treeGroup)
 
-	Options:UpdateTree()
+	LegacyUpdateTree()
 	if operation then
 		if operation == "" then
 			Options.currentGroup = group
@@ -79,28 +111,58 @@ function Options:Load(parent, operation, group)
 end
 
 function Options:UpdateTree()
-	local operationTreeChildren = {}
-
-	for name in pairs(TSM.operations) do
-		tinsert(operationTreeChildren, { value = name, text = name })
+	if Options.treeContext then
+		Options.treeContext:RefreshTree()
+	else
+		LegacyUpdateTree()
 	end
-	
-	sort(operationTreeChildren, function(a, b) return a.value < b.value end)
-
-	Options.treeGroup:SetTree({ { value = 1, text = L["Help"] }, { value = 2, text = L["Operations"], children = operationTreeChildren } })
 end
 
-function Options:SelectTree(treeGroup, _, selection)
-	treeGroup:ReleaseChildren()
+function Options:Load(parent, operation, group)
+	if not (TSMAPI and TSMAPI.OptionsFramework) then
+		return Options:LegacyLoad(parent, operation, group)
+	end
+	local initialSelection = { 1 }
+	local selectingNewOperation = false
 
-	local major, minor = ("\001"):split(selection)
-	major = tonumber(major)
-	if major == 1 then
-		Options:DrawHelp(treeGroup)
-	elseif minor then
-		Options:DrawOperationSettings(treeGroup, minor)
-	else
-		Options:DrawNewOperation(treeGroup)
+	if operation then
+		if operation == "" then
+			initialSelection = { 2 }
+			selectingNewOperation = true
+			Options.currentGroup = group
+		else
+			initialSelection = { 2, operation }
+		end
+	end
+
+	Options.treeContext = TSMAPI.OptionsFramework.CreateTree(parent, {
+		statusTable = TSM.db.global.optionsTreeStatus,
+		initialSelection = initialSelection,
+		nodes = {
+			{
+				value = 1,
+				text = L["Help"],
+				draw = function(container) Options:DrawHelp(container) end,
+			},
+			{
+				value = 2,
+				text = L["Operations"],
+				type = "operations",
+				getChildren = GetOperationList,
+				drawOperation = function(container, operationName)
+					Options:DrawOperationSettings(container, operationName)
+				end,
+				drawNew = function(container)
+					Options:DrawNewOperation(container)
+				end,
+			},
+		},
+	})
+
+	Options.treeGroup = Options.treeContext.treeGroup
+
+	if selectingNewOperation then
+		Options.currentGroup = nil
 	end
 end
 
@@ -204,7 +266,6 @@ function Options:DrawNewOperation(container)
 	local currentGroup = Options.currentGroup
 	local page = {
 		{
-			-- scroll frame to contain everything
 			type = "ScrollFrame",
 			layout = "List",
 			children = {
@@ -231,8 +292,13 @@ function Options:DrawNewOperation(container)
 								end
 								CreateOperation(name)
 								Options:UpdateTree()
-								Options.treeGroup:SelectByPath(2, name)
+								if Options.treeContext then
+                                    Options.treeContext:SelectPath(2, name)
+								elseif Options.treeGroup then
+									Options.treeGroup:SelectByPath(2, name)
+								end
 								TSMAPI:NewOperationCallback("Warehousing", currentGroup, name)
+								Options.currentGroup = nil
 							end,
 							tooltip = L["Give the new operation a name. A descriptive name will help you find this operation later."],
 						},
@@ -267,6 +333,11 @@ end
 
 function Options:DrawOperationGeneral(container, operationName)
 	local operationSettings = TSM.operations[operationName]
+	if not operationSettings then
+		TSM:Printf(L["Operation '%s' is no longer available."], tostring(operationName))
+		Options:UpdateTree()
+		return
+	end
 
 	local page = {
 		{
@@ -412,6 +483,11 @@ function Options:DrawOperationGeneral(container, operationName)
 end
 
 function Options:DrawOperationRelationships(container, operationName)
+	local operation = TSM.operations[operationName]
+	if not operation then
+		Options:UpdateTree()
+		return
+	end
 	local settingInfo = {
 		{
 			label = L["Move Quantity Settings"],
@@ -428,5 +504,5 @@ function Options:DrawOperationRelationships(container, operationName)
 			{key="restockQuantity", label=L["Restock Quantity"]},
 		},
 	}
-	TSMAPI:ShowOperationRelationshipTab(TSM, container, TSM.operations[operationName], settingInfo)
+	TSMAPI:ShowOperationRelationshipTab(TSM, container, operation, settingInfo)
 end

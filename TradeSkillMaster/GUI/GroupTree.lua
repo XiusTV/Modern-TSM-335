@@ -153,13 +153,37 @@ local methods = {
 		self:RefreshRows()
 	end,
 	GetSelectedGroupInfo = function(self, rowNum)
+		local selected = {}
 		local groupInfo = {}
 		for _, data in ipairs(self.rowData) do
 			if data.isSelected then
-				groupInfo[data.groupPath] = { operations = TSM:GetGroupOperations(data.groupPath, self.module), items = TSM:GetGroupItems(data.groupPath) }
-				if self.module and not groupInfo[data.groupPath].operations then
-					groupInfo[data.groupPath] = nil
-				end
+				selected[data.groupPath] = true
+				groupInfo[data.groupPath] = true -- placeholder
+			end
+		end
+		if not next(selected) then
+			return groupInfo
+		end
+
+		local itemsByGroup = {}
+		for groupPath in pairs(selected) do
+			itemsByGroup[groupPath] = {}
+		end
+		for itemString, groupPath in pairs(TSM.db.profile.items) do
+			if itemsByGroup[groupPath] then
+				itemsByGroup[groupPath][itemString] = true
+			end
+		end
+
+		for groupPath in pairs(selected) do
+			local operations = TSM:GetGroupOperations(groupPath, self.module)
+			if self.module and not operations then
+				groupInfo[groupPath] = nil
+			else
+				groupInfo[groupPath] = {
+					operations = operations,
+					items = itemsByGroup[groupPath] or {},
+				}
 			end
 		end
 		return groupInfo

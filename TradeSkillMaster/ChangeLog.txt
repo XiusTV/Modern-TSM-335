@@ -1,3 +1,28 @@
+# v2.8.3.701
+
+TradeSkillMaster: Revived
+
+- Release Date: November 14th, 2025
+- Author: XiusTV (Modern TSM Modernization)
+
+## Shopping Reliability & UX
+
+Reworked the shopping buyout flow so it now tolerates drift in seller, stack size, and buyout data reported by the server. Searches relax automatically and retry faster, which prevents the “Searching for item…” stall and the “must meet minimum bid” error that used to appear after the AH desynced. Each confirmation window now resets its internal state between purchases, grabs the live auction row before placing a bid, and the default shopping tables sort by *Price Per Item* ascending so the cheapest options are always at the top.
+
+## Crafting & Inventory Gathering
+
+Gather search strings and item names are now cached, eliminating hundreds of identical `/exact/xN` rebuilds during large gather sessions. The gather UI reuses the existing `neededMats` / `availableMats` tables instead of cloning them, and `Inventory:GetItemSources` keeps an in-session cache of `GetTotalQuantity` results (including vendor-trade and destroying planners). Destroying logic shares those cached counts as well, which means fewer bag/bank/mail scans and significantly less garbage generation while planning vendor buys, AH purchases, and milling/prospecting tasks.
+
+## Groups & Operations
+
+Operation lookups were tightened throughout the core: `GetGroupOperations`, `GetItemOperation`, and `GetModuleItems` no longer `CopyTable` entire lists per query, and `GetModuleItems` first caches each group’s active operations before mapping them onto items. The GroupTree selection helper now builds item membership in a single pass and all group utilities cache pre-escaped patterns (creating, deleting, or moving branches) to avoid repeated `StrEscape` work on large hierarchies.
+
+## Queue & Destroying
+
+`Queue:HasLoop` now reuses one `visited` table while it walks the crafting tree instead of cloning per recursion level, which eliminates thousands of short-lived tables when building intermediate crafts. Destroying tasks re-use cached mat counts and only recompute milling / prospect / transform quantities when the source mats actually changed.
+
+---
+
 # v2.8.3.668
 
 TradeSkillMaster: Revived

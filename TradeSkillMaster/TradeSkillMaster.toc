@@ -2,17 +2,16 @@
 ## Title: |cff00fe00TradeSkillMaster: Revived|r
 ## Notes: Core addon for the TradeSkillMaster suite, revived for Wrath of the Lich King. Does nothing without modules installed.
 ## Author: Sapu94, Bart39, Gnomezilla [Warmane-Icecrown(A)], BlueAo [Warmane], andrew6180, Yoshiyuka, DimaSheiko, XiusTV, and other contributors...
-## Version: Rev700-Modernized
+## Version: Rev701-Modernized
 ## SavedVariables: TradeSkillMasterAppDB, AscensionTSMDB
-## OptionalDeps: AccurateTime, Ace3, LibDataBroker-1.1, LibDBIcon-1.0, LibExtraTip, TipHelper, LibParse, LibCompress, LibGraph-2.0, SharedMedia, TheUndermineJournal, TheUndermineJournalGE
-## X-Embeds: AccurateTime, Ace3, LibDataBroker-1.1, LibDBIcon-1.0, LibExtraTip, TipHelper, LibParse, LibCompress, LibGraph-2.0
+## OptionalDeps: AccurateTime, Ace3, LibDataBroker-1.1, LibDBIcon-1.0, LibExtraTip, LibParse, LibCompress, LibGraph-2.0, SharedMedia, TheUndermineJournal, TheUndermineJournalGE
+## X-Embeds: AccurateTime, Ace3, LibDataBroker-1.1, LibDBIcon-1.0, LibExtraTip, LibParse, LibCompress, LibGraph-2.0
 ## X-IconTexture: Interface\AddOns\TradeSkillMaster\Media\TSMLogo
 # TSM Revived is based on TSM v2.8.3.
 
 Libs\LibParse\load.xml
 Libs\LibCompress\lib.xml
 Libs\AccurateTime\AccurateTime.lua
-Libs\LibChatAnims\LibChatAnims.xml
 Libs\LibExtraTip\Load.xml
 Libs\LibTSMClass\LibTSMClass.lua
 
@@ -38,6 +37,7 @@ Core\Events.lua
 Core\EventLogger.lua
 Core\ModernTheme.lua
 Core\Options.lua
+Core\OptionsFramework.lua
 Core\Groups.lua
 Core\Modules.lua
 Core\Mover.lua
@@ -68,7 +68,7 @@ Data\Disenchanting.lua
 Data\ItemData.lua
 Data\Conversions.lua
 Data\Vendor.lua
-##Data\ConnectedRealms.lua
+Data\ConnectedRealms.lua
 
 Auction\AuctionControl.lua
 Auction\AuctionScanning.lua

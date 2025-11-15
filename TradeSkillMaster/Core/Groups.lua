@@ -62,8 +62,11 @@ end
 local function GetSubGroups(groupPath)
 	local subGroups = {}
 	local hasSubGroup
+	-- OPTIMIZED: Cache escaped pattern to avoid repeated StrEscape calls
+	local escapedPath = TSMAPI:StrEscape(groupPath)
+	local pattern = "^"..escapedPath..TSM.GROUP_SEP.."([^`]+)$"
 	for group in pairs(TSM.db.profile.groups) do
-		local _, _, subGroupName = strfind(group, "^"..TSMAPI:StrEscape(groupPath)..TSM.GROUP_SEP.."([^`]+)$")
+		local _, _, subGroupName = strfind(group, pattern)
 		if subGroupName then
 			subGroups[group] = subGroupName
 			hasSubGroup = true
@@ -94,8 +97,11 @@ local function DeleteGroup(groupPath)
 	if not TSM.db.profile.groups[groupPath] then return end
 
 	-- delete this group and all subgroups
+	-- OPTIMIZED: Cache escaped pattern
+	local escapedPath = TSMAPI:StrEscape(groupPath)
+	local pattern = "^"..escapedPath..TSM.GROUP_SEP
 	for path in pairs(TSM.db.profile.groups) do
-		if path == groupPath or strfind(path, "^"..TSMAPI:StrEscape(groupPath)..TSM.GROUP_SEP) then
+		if path == groupPath or strfind(path, pattern) then
 			TSM.db.profile.groups[path] = nil
 		end
 	end
@@ -105,7 +111,7 @@ local function DeleteGroup(groupPath)
 		-- move all items in this group its subgroups to the parent
 		local changes = {}
 		for itemString, path in pairs(TSM.db.profile.items) do
-			if path == groupPath or strfind(path, "^"..TSMAPI:StrEscape(groupPath)..TSM.GROUP_SEP) then
+			if path == groupPath or strfind(path, pattern) then
 				changes[itemString] = parent
 			end
 		end
@@ -115,7 +121,7 @@ local function DeleteGroup(groupPath)
 	else
 		-- delete all items in this group or subgroup
 		for itemString, path in pairs(TSM.db.profile.items) do
-			if path == groupPath or strfind(path, "^"..TSMAPI:StrEscape(groupPath)..TSM.GROUP_SEP) then
+			if path == groupPath or strfind(path, pattern) then
 				TSM.db.profile.items[itemString] = nil
 			end
 		end
@@ -129,9 +135,13 @@ local function MoveGroup(groupPath, newPath)
 
 	-- change the path of all subgroups
 	local changes = {}
+	-- OPTIMIZED: Cache escaped patterns
+	local escapedOldPath = TSMAPI:StrEscape(groupPath)
+	local escapedNewPath = TSMAPI:StrEscape(newPath)
+	local pattern = "^"..escapedOldPath..TSM.GROUP_SEP
 	for path, groupData in pairs(TSM.db.profile.groups) do
-		if path == groupPath or strfind(path, "^"..TSMAPI:StrEscape(groupPath)..TSM.GROUP_SEP) then
-			changes[path] = gsub(path, "^"..TSMAPI:StrEscape(groupPath), TSMAPI:StrEscape(newPath))
+		if path == groupPath or strfind(path, pattern) then
+			changes[path] = gsub(path, "^"..escapedOldPath, escapedNewPath)
 		end
 	end
 	for oldPath, newPath in pairs(changes) do
@@ -141,9 +151,10 @@ local function MoveGroup(groupPath, newPath)
 
 	-- change the path for all items in this group (and subgroups)
 	changes = {}
+	-- OPTIMIZED: Reuse escaped pattern from above
 	for itemString, path in pairs(TSM.db.profile.items) do
-		if path == groupPath or strfind(path, "^"..TSMAPI:StrEscape(groupPath)..TSM.GROUP_SEP) then
-			changes[itemString] = gsub(path, "^"..TSMAPI:StrEscape(groupPath), newPath)
+		if path == groupPath or strfind(path, pattern) then
+			changes[itemString] = gsub(path, "^"..escapedOldPath, newPath)
 		end
 	end
 	for itemString, newPath in pairs(changes) do
@@ -272,14 +283,17 @@ function TSM:GetGroupOperations(path, module)
 	if not TSM.db.profile.groups[path] then return end
 
 	if module and TSM.db.profile.groups[path][module] then
-		local operations = CopyTable(TSM.db.profile.groups[path][module])
-		for i=#operations, 1, -1 do
-			if operations[i] == "" or TSM:IsOperationIgnored(module, operations[i]) then
-				tremove(operations, i)
+		local operations = TSM.db.profile.groups[path][module]
+		local result
+		for i = 1, #operations do
+			local operationName = operations[i]
+			if operationName ~= "" and not TSM:IsOperationIgnored(module, operationName) then
+				result = result or {}
+				tinsert(result, operationName)
 			end
 		end
-		if #operations > 0 then
-			return operations
+		if result and #result > 0 then
+			return result
 		end
 	end
 end
@@ -313,9 +327,8 @@ function TSMAPI:GetItemOperation(itemString, module)
 	if not groupPath then return end
 	local operations = TSM:GetGroupOperations(groupPath, module)
 	if not operations then return end
-	local result = CopyTable(operations)
-	result.override = nil
-	return result
+	operations.override = nil
+	return operations
 end
 
 function TSMAPI:GetGroupPath(itemString)
@@ -326,8 +339,15 @@ end
 function TSMAPI:GetModuleItems(module)
 	if not module then return end
 	local result = {}
-	for itemString in pairs(TSM.db.profile.items) do
-		result[itemString] = TSMAPI:GetItemOperation(itemString, module)
+	local operationsCache = {}
+	for groupPath in pairs(TSM.db.profile.groups) do
+		operationsCache[groupPath] = TSM:GetGroupOperations(groupPath, module)
+	end
+	for itemString, groupPath in pairs(TSM.db.profile.items) do
+		local operations = operationsCache[groupPath]
+		if operations then
+			result[itemString] = operations
+		end
 	end
 	return result
 end

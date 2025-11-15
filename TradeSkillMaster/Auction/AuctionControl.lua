@@ -7,6 +7,7 @@
 -- ------------------------------------------------------------------------------ --
 
 local TSM = select(2, ...)
+local abs = math.abs
 local L = LibStub("AceLocale-3.0"):GetLocale("TradeSkillMaster") -- loads the localization table
 
 TSMAPI.AuctionControl = {}
@@ -15,6 +16,49 @@ TSMAPI:RegisterForTracing(private, "TradeSkillMaster.AuctionControl_private")
 LibStub("AceEvent-3.0"):Embed(private)
 private.matchList = {}
 private.currentPage = {}
+private.findRelaxLevel = 0
+private.currentTargetInfo = nil
+
+local FIND_AUCTION_TIMEOUT = 3
+local FIND_AUCTION_TIMER_ID = "TSMShopping_FindAuctionTimeout"
+local MAX_FIND_RELAX_LEVEL = 3
+local BUYOUT_MATCH_TOLERANCE = 500
+
+local function ResetFindRelaxation()
+	private.findRelaxLevel = 0
+	private.currentTargetInfo = nil
+end
+
+local function RelaxFindCriteria()
+	if private.findRelaxLevel < MAX_FIND_RELAX_LEVEL then
+		private.findRelaxLevel = private.findRelaxLevel + 1
+		private.currentTargetInfo = nil
+		return true
+	end
+end
+
+local function ForceLooseMatch()
+	if not private.currentAuction then return end
+	private.currentTargetInfo = { itemString = private.currentAuction.itemString }
+	private:UpdateMatchList()
+	if #private.matchList > 0 then
+		local aucIndex = private.matchList[1]
+		local data = private.currentPage[aucIndex]
+		private:ApplyMatchData(data)
+		private.currentTargetInfo = {
+			itemString = private.currentAuction.itemString,
+			count = private.currentAuction.count,
+			buyout = private.currentAuction.buyout,
+		}
+		ResetFindRelaxation()
+		private:UpdateAuctionConfirmation()
+		return true
+	end
+	return false
+end
+
+local function StartFindAuctionWatchdog() end
+local function StopFindAuctionWatchdog() end
 
 
 local function GetNumInBags(baseItemString)
@@ -25,6 +69,16 @@ local function GetNumInBags(baseItemString)
 		end
 	end
 	return num
+end
+
+local function MatchesAuction(itemString, count, buyout)
+	if not private.currentAuction then return end
+	local targetInfo = private.currentTargetInfo or private.currentAuction
+	if not targetInfo then return end
+	if not itemString or itemString ~= targetInfo.itemString then return end
+	if targetInfo.count and count ~= targetInfo.count then return end
+	if targetInfo.buyout and abs((buyout or 0) - targetInfo.buyout) > BUYOUT_MATCH_TOLERANCE then return end
+	return true
 end
 
 local function ValidateAuction(index, list)
@@ -40,7 +94,15 @@ local function ValidateAuction(index, list)
 	else
 		return
 	end
-	return count == private.currentAuction.count and buyout == private.currentAuction.buyout and itemString == private.currentAuction.itemString, data
+	if MatchesAuction(itemString, count, buyout) then
+		return true, data
+	end
+end
+
+function private:ApplyMatchData(data)
+	if not data or not private.currentAuction then return end
+	private.currentAuction.count = data[2] or private.currentAuction.count
+	private.currentAuction.buyout = data[3] or private.currentAuction.buyout
 end
 
 local diffFrame = CreateFrame("Frame")
@@ -84,6 +146,7 @@ local customPriceWarned
 function private:SetCurrentAuction(record)
 	if not record then
 		private.currentAuction = nil
+		ResetFindRelaxation()
 		return
 	end
 	
@@ -109,6 +172,7 @@ function private:SetCurrentAuction(record)
 		num = 1,
 		destroyingNum = record.parent.destroyingNum,
 	}
+	ResetFindRelaxation()
 end
 
 local count = 0
@@ -132,16 +196,36 @@ function private:FindCurrentAuctionForBuyout(noCache, resetCount)
 	private.matchList = {}
 	private.currentPage = {}
 	
-	if count > 3 then
-		-- auction no longer exists
-		TSM:Print(L["Skipping auction which no longer exists."])
-		diffFrame.num = diffFrame.num - 1
-		private.justBought = true
-		private:AUCTION_ITEM_LIST_UPDATE()
+	if count > 2 then
+		if RelaxFindCriteria() then
+			count = 0
+			TSMAPI.AuctionScan:StopFindScan()
+			private:FindCurrentAuctionForBuyout(true, true)
+		else
+			if not ForceLooseMatch() then
+				TSM:Print(L["Skipping auction which no longer exists."])
+				diffFrame.num = diffFrame.num - 1
+				private.justBought = true
+				private:AUCTION_ITEM_LIST_UPDATE()
+			end
+		end
 		return
 	end
-	TSMAPI.AuctionScan:FindAuction(private.OnAuctionFound, {itemString=private.currentAuction.itemString, buyout=private.currentAuction.buyout, count=private.currentAuction.count, seller=private.currentAuction.seller}, not noCache)
+	local targetInfo = {
+		itemString = private.currentAuction.itemString,
+		buyout = private.currentAuction.buyout,
+		count = private.currentAuction.count,
+	}
+	if private.findRelaxLevel >= 1 then
+		targetInfo.count = nil
+	end
+	if private.findRelaxLevel >= 2 then
+		targetInfo.buyout = nil
+	end
+	private.currentTargetInfo = targetInfo
+	TSMAPI.AuctionScan:FindAuction(private.OnAuctionFound, targetInfo, not noCache)
 	private.isSearching = true
+	StartFindAuctionWatchdog()
 end
 
 function private:DoBuyout()
@@ -225,6 +309,7 @@ function private:UpdateMatchList(noPageScanning)
 	if noPageScanning then
 		for i=1, #private.currentPage do
 			if ValidateAuction(i, private.currentPage[i]) then
+				private:ApplyMatchData(private.currentPage[i])
 				tinsert(private.matchList, i)
 			end
 		end
@@ -234,6 +319,7 @@ function private:UpdateMatchList(noPageScanning)
 			local isValid, data = ValidateAuction(i, "list")
 			private.currentPage[i] = data
 			if isValid then
+				private:ApplyMatchData(data)
 				tinsert(private.matchList, i)
 			end
 		end
@@ -243,12 +329,14 @@ end
 function private:OnAuctionFound(cacheIndex)
 	if not private.isSearching or not private.currentAuction then return end
 	private.isSearching = nil
+	StopFindAuctionWatchdog()
 	
 	private:UpdateMatchList()
 	
 	if #private.matchList == 0 then
 		private:FindCurrentAuctionForBuyout(true)
 	else
+		ResetFindRelaxation()
 		private.currentCacheIndex = cacheIndex
 		private:UpdateAuctionConfirmation()
 	end
@@ -264,8 +352,17 @@ function private:AUCTION_ITEM_LIST_UPDATE()
 		if private.currentAuction.num > private.currentAuction.numAuctions then
 			TSMAPI.AuctionControl:HideConfirmation()
 		else
+			-- Reset state for next auction in the stack
+			count = 0
+			ResetFindRelaxation()
+			wipe(private.currentPage)
 			if #private.matchList > 0 then
-				private:UpdateAuctionConfirmation()
+				private:UpdateMatchList()
+				if #private.matchList > 0 then
+					private:UpdateAuctionConfirmation()
+				else
+					private:FindCurrentAuctionForBuyout(nil, true)
+				end
 			else
 				private:FindCurrentAuctionForBuyout(nil, true)
 			end
@@ -348,6 +445,13 @@ function private:ShowConfirmationWindow()
 	private:SetCurrentAuction(private.rt:GetSelectedAuction())
 	if not private.currentAuction then return end
 	
+	-- Reset all state for a fresh purchase attempt
+	count = 0
+	wipe(private.currentPage)
+	wipe(private.matchList)
+	ResetFindRelaxation()
+	StopFindAuctionWatchdog(true)
+	
 	private:RegisterEvent("AUCTION_ITEM_LIST_UPDATE")
 	diffFrame.num = 0
 	diffFrame:Show()
@@ -392,9 +496,34 @@ function TSMAPI.AuctionControl:HideConfirmation()
 	if private.confirmationFrame then private.confirmationFrame:Hide() end
 	if private.postFrame then private.postFrame:Hide() end
 	diffFrame:Hide()
+	ResetFindRelaxation()
+	StopFindAuctionWatchdog()
 	private.isSearching = nil
 	private:SetCurrentAuction()
 	TSMAPI.AuctionScan:StopFindScan()
+end
+
+local function StartFindAuctionWatchdog()
+	TSMAPI:CancelFrame(FIND_AUCTION_TIMER_ID)
+	TSMAPI:CreateTimeDelay(FIND_AUCTION_TIMER_ID, FIND_AUCTION_TIMEOUT, function()
+		if not private.isSearching or not private.currentAuction then return end
+		private.isSearching = nil
+		if RelaxFindCriteria() then
+			TSMAPI.AuctionScan:StopFindScan()
+			private:FindCurrentAuctionForBuyout(true, true)
+		else
+			if not ForceLooseMatch() then
+				TSM:Print(L["Skipping auction which no longer exists."])
+				diffFrame.num = diffFrame.num - 1
+				private.justBought = true
+				private:AUCTION_ITEM_LIST_UPDATE()
+			end
+		end
+	end)
+end
+
+local function StopFindAuctionWatchdog()
+	TSMAPI:CancelFrame(FIND_AUCTION_TIMER_ID)
 end
 
 function private:UpdateAuctionConfirmation()
