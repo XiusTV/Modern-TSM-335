@@ -9,7 +9,8 @@
 -- This file is to contain things that are common between different scan types.
 
 local TSM = select(2, ...)
-local Manage = TSM:NewModule("Manage", "AceEvent-3.0")
+local Manage = LibStub("AceAddon-3.0"):NewAddon("TSM_Auctioning_Manage", "AceEvent-3.0")
+TSM.Manage = Manage
 local L = LibStub("AceLocale-3.0"):GetLocale("TradeSkillMaster_Auctioning") -- loads the localization table
 
 local scanStatus = {}

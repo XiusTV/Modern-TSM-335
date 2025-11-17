@@ -7,7 +7,8 @@
 -- ------------------------------------------------------------------------------ --
 
 local TSM = select(2, ...)
-local Util = TSM:NewModule("Util")
+local Util = LibStub("AceAddon-3.0"):NewAddon("TSM_Auctioning_Util")
+TSM.Util = Util
 local L = LibStub("AceLocale-3.0"):GetLocale("TradeSkillMaster_Auctioning") -- loads the localization table
 
 local currentBank = nil

@@ -99,17 +99,25 @@ function private.UpdateSTData(frame)
 	for itemString, quantity in pairs(items) do
 		local name, link = TSMAPI:GetSafeItemInfo(itemString)
 		if name then
-			local buyout = TSM:GetMaxPrice(TSM.db.global.quickPostingPrice, itemString)
+			local buyout, err = TSM:GetMaxPrice(TSM.db.global.quickPostingPrice, itemString)
+			-- If price lookup failed, try to get a fallback price
+			if not buyout or buyout <= 0 then
+				-- Try DBMarket as fallback
+				local fallbackPrice = TSM:GetMaxPrice("dbmarket", itemString)
+				if fallbackPrice and fallbackPrice > 0 then
+					buyout = fallbackPrice
+				end
+			end
 			local row = {
 				cols = {
 					{value=link},
 					{value=quantity},
-					{value=TSMAPI:FormatTextMoney(buyout) or "---"},
+					{value=(buyout and buyout > 0) and TSMAPI:FormatTextMoney(buyout) or "---"},
 				},
 				itemString = itemString,
 				link = link,
 				name = name,
-				buyout = buyout,
+				buyout = buyout or 0,
 			}
 			tinsert(stData, row)
 		end

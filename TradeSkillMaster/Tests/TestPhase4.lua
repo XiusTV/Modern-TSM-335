@@ -151,7 +151,8 @@ function _G.TestPhase4Visual()
 	print("|cffaaaaaa- Click X or run TestPhase4Visual() again to close|r")
 end
 
-print("|cff00ff00Phase 4 Tests Loaded!|r")
-print("|cffffd700/run TestPhase4()|r - Run all Phase 4 tests")
-print("|cffffd700/run TestPhase4Visual()|r - Show Dashboard")
+-- Test messages removed for regular users
+-- print("|cff00ff00Phase 4 Tests Loaded!|r")
+-- print("|cffffd700/run TestPhase4()|r - Run all Phase 4 tests")
+-- print("|cffffd700/run TestPhase4Visual()|r - Show Dashboard")
 

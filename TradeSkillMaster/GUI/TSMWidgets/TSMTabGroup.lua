@@ -175,7 +175,17 @@ local methods = {
 		end
 		status.selected = value
 		if found then
-			self:Fire("OnGroupSelected", value)
+			-- Ensure events table exists and Fire method is available
+			if not self.events then
+				self.events = {}
+			end
+			-- Fire the event if callback is registered
+			if self.Fire then
+				self:Fire("OnGroupSelected", value)
+			elseif self.events["OnGroupSelected"] then
+				-- Fallback: call callback directly if Fire method not available
+				self.events["OnGroupSelected"](self, nil, value)
+			end
 		end
 	end,
 

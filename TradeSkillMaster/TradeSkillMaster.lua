@@ -228,41 +228,67 @@ function TSM:OnInitialize()
 	end
 
 	-- create / register the minimap button
-	TSM.LDBIcon = LibStub("LibDataBroker-1.1", true) and LibStub("LibDBIcon-1.0", true)
-	local TradeSkillMasterLauncher = LibStub("LibDataBroker-1.1", true):NewDataObject("TradeSkillMasterMinimapIcon", {
-		icon = "Interface\\Addons\\TradeSkillMaster\\Media\\TSM_Icon",
-		OnClick = function(_, button) -- fires when a user clicks on the minimap icon
-			if button == "LeftButton" then
-				-- does the same thing as typing '/tsm'
-				TSM.Modules:ChatCommand("")
-			end
-		end,
-		OnTooltipShow = function(tt) -- tooltip that shows when you hover over the minimap icon
-			local cs = "|cffffffcc"
-			local ce = "|r"
-			tt:AddLine("TradeSkillMaster " .. TSM._version)
-			tt:AddLine(format(L["%sLeft-Click%s to open the main window"], cs, ce))
-			tt:AddLine(format(L["%sDrag%s to move this button"], cs, ce))
-		end,
-	})
-	TSM.LDBIcon:Register("TradeSkillMaster", TradeSkillMasterLauncher, TSM.db.profile.minimapIcon)
-	local TradeSkillMasterLauncher2 = LibStub("LibDataBroker-1.1", true):NewDataObject("TradeSkillMaster", {
-		type = "launcher",
-		icon = "Interface\\Addons\\TradeSkillMaster\\Media\\TSM_Icon2",
-		OnClick = function(_, button) -- fires when a user clicks on the minimap icon
-			if button == "LeftButton" then
-				-- does the same thing as typing '/tsm'
-				TSM.Modules:ChatCommand("")
-			end
-		end,
-		OnTooltipShow = function(tt) -- tooltip that shows when you hover over the minimap icon
-			local cs = "|cffffffcc"
-			local ce = "|r"
-			tt:AddLine("TradeSkillMaster " .. TSM._version)
-			tt:AddLine(format(L["%sLeft-Click%s to open the main window"], cs, ce))
-			tt:AddLine(format(L["%sDrag%s to move this button"], cs, ce))
-		end,
-	})
+	local LDB = LibStub("LibDataBroker-1.1", true)
+	local LDBIcon = LibStub("LibDBIcon-1.0", true)
+	TSM.LDBIcon = LDBIcon
+	
+	if LDB and LDBIcon then
+		-- Initialize minimapIcon settings if they don't exist
+		if not TSM.db.profile.minimapIcon then
+			TSM.db.profile.minimapIcon = {
+				hide = false,
+			}
+		end
+		
+		local TradeSkillMasterLauncher = LDB:NewDataObject("TradeSkillMasterMinimapIcon", {
+			icon = "Interface\\Addons\\TradeSkillMaster\\Media\\TSM_Icon",
+			OnClick = function(_, button) -- fires when a user clicks on the minimap icon
+				if button == "LeftButton" then
+					-- does the same thing as typing '/tsm'
+					if TSM.Modules and TSM.Modules.ChatCommand then
+						TSM.Modules:ChatCommand("")
+					end
+				end
+			end,
+			OnTooltipShow = function(tt) -- tooltip that shows when you hover over the minimap icon
+				local cs = "|cffffffcc"
+				local ce = "|r"
+				tt:AddLine("TradeSkillMaster " .. (TSM._version or "Unknown"))
+				tt:AddLine(format(L["%sLeft-Click%s to open the main window"], cs, ce))
+				tt:AddLine(format(L["%sDrag%s to move this button"], cs, ce))
+			end,
+		})
+		
+		-- Register the icon if not already registered
+		if TradeSkillMasterLauncher and not LDBIcon:IsRegistered("TradeSkillMaster") then
+			LDBIcon:Register("TradeSkillMaster", TradeSkillMasterLauncher, TSM.db.profile.minimapIcon)
+		end
+		
+		-- Create second launcher object (for compatibility)
+		local TradeSkillMasterLauncher2 = LDB:NewDataObject("TradeSkillMaster", {
+			type = "launcher",
+			icon = "Interface\\Addons\\TradeSkillMaster\\Media\\TSM_Icon2",
+			OnClick = function(_, button) -- fires when a user clicks on the minimap icon
+				if button == "LeftButton" then
+					-- does the same thing as typing '/tsm'
+					if TSM.Modules and TSM.Modules.ChatCommand then
+						TSM.Modules:ChatCommand("")
+					end
+				end
+			end,
+			OnTooltipShow = function(tt) -- tooltip that shows when you hover over the minimap icon
+				local cs = "|cffffffcc"
+				local ce = "|r"
+				tt:AddLine("TradeSkillMaster " .. (TSM._version or "Unknown"))
+				tt:AddLine(format(L["%sLeft-Click%s to open the main window"], cs, ce))
+				tt:AddLine(format(L["%sDrag%s to move this button"], cs, ce))
+			end,
+		})
+	else
+		-- Libraries not available - minimap icon won't be shown
+		-- This is fine as they're optional dependencies
+		TSM.LDBIcon = nil
+	end
 
 	-- create the main TSM frame
 	TSM:CreateMainFrame()
@@ -814,7 +840,8 @@ end
 C_Timer.After(2, function()
 	if TSM.Dashboard then
 		TSM.Dashboard.Initialize()
-		TSM:Print("|cffffd700Analytics Dashboard loaded! Use: |cff00ff00/tsm analytics|r")
+		-- Dashboard loaded message removed for regular users
+		-- TSM:Print("|cffffd700Analytics Dashboard loaded! Use: |cff00ff00/tsm analytics|r")
 	end
 end)
 

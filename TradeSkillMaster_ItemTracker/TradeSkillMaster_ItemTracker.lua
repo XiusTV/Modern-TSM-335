@@ -8,7 +8,17 @@
 
 -- register this file with Ace Libraries
 local TSM = select(2, ...)
-TSM = LibStub("AceAddon-3.0"):NewAddon(TSM, "TSM_ItemTracker", "AceEvent-3.0", "AceConsole-3.0")
+-- Ensure LibStub is available (should be from TSM dependency, but add safety check)
+local LibStub = LibStub or _G.LibStub
+if not LibStub then
+	error("TradeSkillMaster_ItemTracker: LibStub not found! Make sure TradeSkillMaster is loaded.")
+end
+-- Get AceAddon-3.0 (embedded in TradeSkillMaster)
+local AceAddon = LibStub("AceAddon-3.0", true)
+if not AceAddon then
+	error("TradeSkillMaster_ItemTracker: AceAddon-3.0 not found! Make sure TradeSkillMaster is loaded and enabled.")
+end
+TSM = AceAddon:NewAddon(TSM, "TSM_ItemTracker", "AceEvent-3.0", "AceConsole-3.0")
 local L = LibStub("AceLocale-3.0"):GetLocale("TradeSkillMaster_ItemTracker")
 
 -- default values for the savedDB
@@ -52,8 +62,12 @@ local guildDefaults = {
 -- Anything that needs to be done in order to initialize the addon should go here
 function TSM:OnInitialize()
 	-- create shortcuts to all the modules
-	for moduleName, module in pairs(TSM.modules) do
-		TSM[moduleName] = module
+	-- Modules are now created directly in their files and assigned to TSM[name]
+	-- This loop is kept for backwards compatibility if TSM.modules exists
+	if TSM.modules then
+		for moduleName, module in pairs(TSM.modules) do
+			TSM[moduleName] = module
+		end
 	end
 
 	-- load the saved variables table into TSM.db

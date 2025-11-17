@@ -8,7 +8,8 @@
 
 -- load the parent file (TSM) into a local variable and register this file as a module
 local TSM = select(2, ...)
-local Config = TSM:NewModule("Config", "AceEvent-3.0", "AceHook-3.0")
+local Config = LibStub("AceAddon-3.0"):NewAddon("TSM_ItemTracker_Config", "AceEvent-3.0", "AceHook-3.0")
+TSM.Config = Config
 local AceGUI = LibStub("AceGUI-3.0") -- load the AceGUI libraries
 local L = LibStub("AceLocale-3.0"):GetLocale("TradeSkillMaster_ItemTracker")
 

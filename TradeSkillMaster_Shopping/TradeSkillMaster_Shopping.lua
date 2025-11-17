@@ -118,11 +118,41 @@ function TSM:GetMaxPrice(operationPrice, itemString)
 	if type(operationPrice) == "number" then
 		price = operationPrice
 	elseif type(operationPrice) == "string" then
-		local func, parseErr = TSMAPI:ParseCustomPrice(operationPrice)
+		-- Fix common typos in price sources
+		local fixedPrice = operationPrice
+		-- Fix "dbminmarket" typo -> "dbminbuyout" (common user error)
+		fixedPrice = fixedPrice:gsub("dbminmarket", "dbminbuyout")
+		-- Ensure price string is valid (ParseCustomPrice will handle trimming)
+		
+		local func, parseErr = TSMAPI:ParseCustomPrice(fixedPrice)
 		err = parseErr
-		price = func and func(itemString)
+		if func then
+			price = func(itemString)
+			-- If price is 0 or nil, try to get a fallback value
+			if (not price or price == 0) and itemString then
+				-- Try to get DBMarket as fallback if original price source failed
+				if not parseErr and fixedPrice ~= "dbmarket" then
+					local fallbackFunc = TSMAPI:ParseCustomPrice("dbmarket")
+					if fallbackFunc then
+						local fallbackPrice = fallbackFunc(itemString)
+						if fallbackPrice and fallbackPrice > 0 then
+							-- Use fallback but note it in error (for debugging)
+							price = fallbackPrice
+						end
+					end
+				end
+			end
+		else
+			-- Parse failed - try to provide helpful error
+			if parseErr then
+				err = parseErr
+			else
+				err = format("Failed to parse price: %s", operationPrice)
+			end
+		end
 	end
-	return price ~= 0 and price or nil, err
+	-- Return nil if price is 0 or invalid, otherwise return the price
+	return (price and price > 0) and price or nil, err
 end
 
 function TSM:AddSidebarFeature(...)

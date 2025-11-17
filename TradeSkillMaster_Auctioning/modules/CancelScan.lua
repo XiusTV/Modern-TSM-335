@@ -7,7 +7,8 @@
 -- ------------------------------------------------------------------------------ --
 
 local TSM = select(2, ...)
-local Cancel = TSM:NewModule("Cancel", "AceEvent-3.0")
+local Cancel = LibStub("AceAddon-3.0"):NewAddon("TSM_Auctioning_Cancel", "AceEvent-3.0")
+TSM.Cancel = Cancel
 local L = LibStub("AceLocale-3.0"):GetLocale("TradeSkillMaster_Auctioning") -- loads the localization table
 
 local cancelQueue, currentItem, tempIndexList = {}, {}, {}

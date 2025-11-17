@@ -7,7 +7,8 @@
 -- ------------------------------------------------------------------------------ --
 
 local TSM = select(2, ...)
-local Reset = TSM:NewModule("Reset", "AceEvent-3.0")
+local Reset = LibStub("AceAddon-3.0"):NewAddon("TSM_Auctioning_Reset", "AceEvent-3.0")
+TSM.Reset = Reset
 local L = LibStub("AceLocale-3.0"):GetLocale("TradeSkillMaster_Auctioning") -- loads the localization table
 
 local resetData, summarySTCache, showCache, itemsReset, justBought = {}, {}, {}, {}, {}

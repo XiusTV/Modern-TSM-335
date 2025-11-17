@@ -8,7 +8,8 @@
 
 -- load the parent file (TSM) into a local variable and register this file as a module
 local TSM = select(2, ...)
-local Data = TSM:NewModule("Data", "AceEvent-3.0", "AceHook-3.0")
+local Data = LibStub("AceAddon-3.0"):NewAddon("TSM_ItemTracker_Data", "AceEvent-3.0", "AceHook-3.0")
+TSM.Data = Data
 local L = LibStub("AceLocale-3.0"):GetLocale("TradeSkillMaster_ItemTracker")
 
 TSM.CURRENT_PLAYER, TSM.CURRENT_GUILD = UnitName("player"), GetGuildInfo("player")

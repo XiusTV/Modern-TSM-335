@@ -7,7 +7,8 @@
 -- ------------------------------------------------------------------------------ --
 
 local TSM = select(2, ...)
-local Log = TSM:NewModule("Log", "AceEvent-3.0")
+local Log = LibStub("AceAddon-3.0"):NewAddon("TSM_Auctioning_Log", "AceEvent-3.0")
+TSM.Log = Log
 local L = LibStub("AceLocale-3.0"):GetLocale("TradeSkillMaster_Auctioning")
 
 local records = {}

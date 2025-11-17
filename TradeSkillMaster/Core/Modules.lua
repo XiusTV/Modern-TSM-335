@@ -18,8 +18,20 @@ local moduleNames = TSM.moduleNames
 -- initialization stuff
 function Modules:OnEnable()
 	-- register the chat commands (slash commands) - whenver '/tsm' or '/tradeskillmaster' is typed by the user, Modules:ChatCommand() will be called
-	Modules:RegisterChatCommand("tsm", "ChatCommand")
-	Modules:RegisterChatCommand("tradeskillmaster", "ChatCommand")
+	-- Try to register on Modules first, fallback to TSM if Modules doesn't have RegisterChatCommand
+	if Modules.RegisterChatCommand then
+		Modules:RegisterChatCommand("tsm", "ChatCommand")
+		Modules:RegisterChatCommand("tradeskillmaster", "ChatCommand")
+	elseif TSM.RegisterChatCommand then
+		-- Fallback: register on TSM directly (TSM also has AceConsole-3.0 embedded)
+		TSM:RegisterChatCommand("tsm", function(input) Modules:ChatCommand(input) end)
+		TSM:RegisterChatCommand("tradeskillmaster", function(input) Modules:ChatCommand(input) end)
+	else
+		-- Last resort: use SlashCmdList directly
+		SlashCmdList["TSM_TSM"] = function(input) Modules:ChatCommand(input) end
+		_G["SLASH_TSM_TSM1"] = "/tsm"
+		_G["SLASH_TSM_TSM2"] = "/tradeskillmaster"
+	end
 
 	-- tooltip setup
 	TSM:SetupTooltips()

@@ -7,7 +7,8 @@
 -- ------------------------------------------------------------------------------ --
 
 local TSM = select(2, ...)
-local Scan = TSM:NewModule("Scan", "AceEvent-3.0")
+local Scan = LibStub("AceAddon-3.0"):NewAddon("TSM_Auctioning_Scan", "AceEvent-3.0")
+TSM.Scan = Scan
 local L = LibStub("AceLocale-3.0"):GetLocale("TradeSkillMaster_Auctioning") -- loads the localization table
 
 Scan.auctionData = {}

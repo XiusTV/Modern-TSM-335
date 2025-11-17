@@ -267,5 +267,6 @@ _G.TestPhase5Live = TestPhase5Live
 _G.TestPhase5Visual = TestPhase5Visual
 _G.TestPhase5All = TestPhase5All
 
-print("|cffffd700Phase 5 tests loaded!|r Use: /run TestPhase5()")
+-- Test messages removed for regular users
+-- print("|cffffd700Phase 5 tests loaded!|r Use: /run TestPhase5()")
 

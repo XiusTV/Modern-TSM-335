@@ -42,8 +42,12 @@ function TSM:OnInitialize()
 	-- load the savedDB into TSM.db
 	TSM.db = LibStub:GetLibrary("AceDB-3.0"):New("AscensionTSM_AuctioningDB", savedDBDefaults, true)
 
-	for name, module in pairs(TSM.modules) do
-		TSM[name] = module
+	-- Modules are now created directly in their files and assigned to TSM[name]
+	-- This loop is kept for backwards compatibility if TSM.modules exists
+	if TSM.modules then
+		for name, module in pairs(TSM.modules) do
+			TSM[name] = module
+		end
 	end
 
 	-- Add this character to the alt list so it's not undercut by the player

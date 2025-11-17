@@ -38,6 +38,24 @@ local GRAPH_MODES = {
 }
 
 -- ============================================================================
+-- Helper Functions
+-- ============================================================================
+
+-- Safe SetColorTexture wrapper that works on 3.3.5 clients
+local function SafeSetColorTexture(texture, r, g, b, a)
+	if not texture then return end
+	a = a or 1
+	if texture.SetColorTexture then
+		-- Modern API available
+		texture:SetColorTexture(r, g, b, a)
+	else
+		-- Fallback for 3.3.5: use white texture with vertex color
+		texture:SetTexture("Interface\\Buttons\\WHITE8X8")
+		texture:SetVertexColor(r, g, b, a)
+	end
+end
+
+-- ============================================================================
 -- Initialization
 -- ============================================================================
 
@@ -138,7 +156,7 @@ function private.CreateMainFrame()
 	-- Background
 	local bg = frame:CreateTexture(nil, "BACKGROUND")
 	bg:SetAllPoints()
-	bg:SetColorTexture(0.05, 0.05, 0.05, 0.95)
+	SafeSetColorTexture(bg, 0.05, 0.05, 0.05, 0.95)
 	frame.bg = bg
 	
 	-- Title
@@ -203,7 +221,7 @@ function private.CreateMainFrame()
 	
 	local statsBg = statsFrame:CreateTexture(nil, "BACKGROUND")
 	statsBg:SetAllPoints()
-	statsBg:SetColorTexture(0.15, 0.15, 0.15, 0.8)
+	SafeSetColorTexture(statsBg, 0.15, 0.15, 0.15, 0.8)
 	
 	-- Create stats sections
 	private.CreateStatsSection(statsFrame)
@@ -228,7 +246,7 @@ function private.CreateTimeRangeButtons(parent)
 		
 		local btnBg = btn:CreateTexture(nil, "BACKGROUND")
 		btnBg:SetAllPoints()
-		btnBg:SetColorTexture(0.2, 0.2, 0.2, 1)
+		SafeSetColorTexture(btnBg, 0.2, 0.2, 0.2, 1)
 		btn.bg = btnBg
 		
 		local btnText = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -242,14 +260,14 @@ function private.CreateTimeRangeButtons(parent)
 		end)
 		
 		btn:SetScript("OnEnter", function(self)
-			self.bg:SetColorTexture(0.3, 0.3, 0.3, 1)
+			SafeSetColorTexture(self.bg, 0.3, 0.3, 0.3, 1)
 		end)
 		
 		btn:SetScript("OnLeave", function(self)
 			if private.selectedTimeRange == self.range.key then
-				self.bg:SetColorTexture(0.4, 0.35, 0, 1) -- Gold for selected
+				SafeSetColorTexture(self.bg, 0.4, 0.35, 0, 1) -- Gold for selected
 			else
-				self.bg:SetColorTexture(0.2, 0.2, 0.2, 1)
+				SafeSetColorTexture(self.bg, 0.2, 0.2, 0.2, 1)
 			end
 		end)
 		
@@ -259,7 +277,7 @@ function private.CreateTimeRangeButtons(parent)
 	
 	parent.timeButtons = buttons
 	private.selectedTimeRange = "all"
-	buttons["all"].bg:SetColorTexture(0.4, 0.35, 0, 1)
+	SafeSetColorTexture(buttons["all"].bg, 0.4, 0.35, 0, 1)
 end
 
 function private.CreateCharacterSelector(parent)
@@ -270,7 +288,7 @@ function private.CreateCharacterSelector(parent)
 	
 	local dropdownBg = dropdown:CreateTexture(nil, "BACKGROUND")
 	dropdownBg:SetAllPoints()
-	dropdownBg:SetColorTexture(0.2, 0.2, 0.2, 1)
+	SafeSetColorTexture(dropdownBg, 0.2, 0.2, 0.2, 1)
 	dropdown.bg = dropdownBg
 	
 	local dropdownText = dropdown:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -279,11 +297,11 @@ function private.CreateCharacterSelector(parent)
 	dropdown.text = dropdownText
 	
 	dropdown:SetScript("OnEnter", function(self)
-		self.bg:SetColorTexture(0.3, 0.3, 0.3, 1)
+		SafeSetColorTexture(self.bg, 0.3, 0.3, 0.3, 1)
 	end)
 	
 	dropdown:SetScript("OnLeave", function(self)
-		self.bg:SetColorTexture(0.2, 0.2, 0.2, 1)
+		SafeSetColorTexture(self.bg, 0.2, 0.2, 0.2, 1)
 	end)
 	
 	dropdown:SetScript("OnClick", function(self)
@@ -312,12 +330,12 @@ function private.ShowCharacterMenu(anchor)
 	
 	local bg = menu:CreateTexture(nil, "BACKGROUND")
 	bg:SetAllPoints()
-	bg:SetColorTexture(0.1, 0.1, 0.1, 0.95)
+	SafeSetColorTexture(bg, 0.1, 0.1, 0.1, 0.95)
 	menu.bg = bg
 	
 	local border = menu:CreateTexture(nil, "BORDER")
 	border:SetAllPoints()
-	border:SetColorTexture(0.4, 0.4, 0.4, 1)
+	SafeSetColorTexture(border, 0.4, 0.4, 0.4, 1)
 	border:SetDrawLayer("BORDER", -1)
 	
 	-- Close button
@@ -339,7 +357,7 @@ function private.ShowCharacterMenu(anchor)
 	selectAll:SetPoint("TOPLEFT", 10, -35)
 	local selectAllBg = selectAll:CreateTexture(nil, "BACKGROUND")
 	selectAllBg:SetAllPoints()
-	selectAllBg:SetColorTexture(0.2, 0.5, 0.2, 1)
+	SafeSetColorTexture(selectAllBg, 0.2, 0.5, 0.2, 1)
 	selectAll.bg = selectAllBg
 	local selectAllText = selectAll:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 	selectAllText:SetPoint("CENTER")
@@ -357,7 +375,7 @@ function private.ShowCharacterMenu(anchor)
 	deselectAll:SetPoint("TOPRIGHT", -10, -35)
 	local deselectAllBg = deselectAll:CreateTexture(nil, "BACKGROUND")
 	deselectAllBg:SetAllPoints()
-	deselectAllBg:SetColorTexture(0.5, 0.2, 0.2, 1)
+	SafeSetColorTexture(deselectAllBg, 0.5, 0.2, 0.2, 1)
 	deselectAll.bg = deselectAllBg
 	local deselectAllText = deselectAll:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 	deselectAllText:SetPoint("CENTER")
@@ -380,12 +398,12 @@ function private.ShowCharacterMenu(anchor)
 		
 		local checkBg = checkbox:CreateTexture(nil, "BACKGROUND")
 		checkBg:SetAllPoints()
-		checkBg:SetColorTexture(0.2, 0.2, 0.2, 1)
+		SafeSetColorTexture(checkBg, 0.2, 0.2, 0.2, 1)
 		
 		local check = checkbox:CreateTexture(nil, "OVERLAY")
 		check:SetSize(12, 12)
 		check:SetPoint("CENTER")
-		check:SetColorTexture(0, 1, 0, 1)
+		SafeSetColorTexture(check, 0, 1, 0, 1)
 		checkbox.check = check
 		
 		-- Set initial state
@@ -473,7 +491,7 @@ function private.CreateGraphModeSelector(parent)
 		
 		local btnBg = btn:CreateTexture(nil, "BACKGROUND")
 		btnBg:SetAllPoints()
-		btnBg:SetColorTexture(0.2, 0.2, 0.2, 1)
+		SafeSetColorTexture(btnBg, 0.2, 0.2, 0.2, 1)
 		btn.bg = btnBg
 		
 		local btnText = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -488,14 +506,14 @@ function private.CreateGraphModeSelector(parent)
 		end)
 		
 		btn:SetScript("OnEnter", function(self)
-			self.bg:SetColorTexture(0.3, 0.3, 0.3, 1)
+			SafeSetColorTexture(self.bg, 0.3, 0.3, 0.3, 1)
 		end)
 		
 		btn:SetScript("OnLeave", function(self)
 			if private.graphMode == self.mode.key then
-				self.bg:SetColorTexture(0.15, 0.4, 0.15, 1) -- Green for selected
+				SafeSetColorTexture(self.bg, 0.15, 0.4, 0.15, 1) -- Green for selected
 			else
-				self.bg:SetColorTexture(0.2, 0.2, 0.2, 1)
+				SafeSetColorTexture(self.bg, 0.2, 0.2, 0.2, 1)
 			end
 		end)
 		
@@ -504,7 +522,7 @@ function private.CreateGraphModeSelector(parent)
 	end
 	
 	parent.graphModeButtons = buttons
-	buttons["gold"].bg:SetColorTexture(0.15, 0.4, 0.15, 1)
+	SafeSetColorTexture(buttons["gold"].bg, 0.15, 0.4, 0.15, 1)
 end
 
 function private.CreateStatsSection(parent)
@@ -564,7 +582,7 @@ function private.CreateDetailsPanel(parent)
 	
 	local panelBg = panel:CreateTexture(nil, "BACKGROUND")
 	panelBg:SetAllPoints()
-	panelBg:SetColorTexture(0.1, 0.1, 0.1, 0.9)
+	SafeSetColorTexture(panelBg, 0.1, 0.1, 0.1, 0.9)
 	
 	-- Title with toggle
 	local titleBtn = CreateFrame("Button", nil, panel)
@@ -638,9 +656,9 @@ function private.OnTimeRangeClicked(range)
 	if header and header.timeButtons then
 		for key, btn in pairs(header.timeButtons) do
 			if key == range.key then
-				btn.bg:SetColorTexture(0.4, 0.35, 0, 1) -- Gold
+				SafeSetColorTexture(btn.bg, 0.4, 0.35, 0, 1) -- Gold
 			else
-				btn.bg:SetColorTexture(0.2, 0.2, 0.2, 1)
+				SafeSetColorTexture(btn.bg, 0.2, 0.2, 0.2, 1)
 			end
 		end
 	end
@@ -661,9 +679,9 @@ function private.OnGraphModeClicked(mode)
 	if header and header.graphModeButtons then
 		for key, btn in pairs(header.graphModeButtons) do
 			if key == mode.key then
-				btn.bg:SetColorTexture(0.15, 0.4, 0.15, 1) -- Green
+				SafeSetColorTexture(btn.bg, 0.15, 0.4, 0.15, 1) -- Green
 			else
-				btn.bg:SetColorTexture(0.2, 0.2, 0.2, 1)
+				SafeSetColorTexture(btn.bg, 0.2, 0.2, 0.2, 1)
 			end
 		end
 	end
@@ -936,7 +954,7 @@ function private.CreateEmbeddedDashboard(parentFrame)
 	-- Background
 	local bg = frame:CreateTexture(nil, "BACKGROUND")
 	bg:SetAllPoints()
-	bg:SetColorTexture(0.05, 0.05, 0.05, 0.5)
+	SafeSetColorTexture(bg, 0.05, 0.05, 0.05, 0.5)
 	
 	-- Title
 	local title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
@@ -987,7 +1005,7 @@ function private.CreateEmbeddedDashboard(parentFrame)
 	
 	local statsBg = statsFrame:CreateTexture(nil, "BACKGROUND")
 	statsBg:SetAllPoints()
-	statsBg:SetColorTexture(0.15, 0.15, 0.15, 0.8)
+	SafeSetColorTexture(statsBg, 0.15, 0.15, 0.15, 0.8)
 	
 	private.CreateStatsSection(statsFrame)
 	frame.statsFrame = statsFrame
@@ -1001,7 +1019,7 @@ function private.CreateEmbeddedDashboard(parentFrame)
 		
 		local detailsBg = detailsFrame:CreateTexture(nil, "BACKGROUND")
 		detailsBg:SetAllPoints()
-		detailsBg:SetColorTexture(0.1, 0.1, 0.1, 0.9)
+		SafeSetColorTexture(detailsBg, 0.1, 0.1, 0.1, 0.9)
 		
 		local detailsTitle = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 		detailsTitle:SetPoint("TOP", 0, -10)

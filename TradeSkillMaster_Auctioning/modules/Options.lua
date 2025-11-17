@@ -8,7 +8,8 @@
 
 -- load the parent file (TSM) into a local variable and register this file as a module
 local TSM = select(2, ...)
-local Options = TSM:NewModule("Options", "AceEvent-3.0", "AceHook-3.0")
+local Options = LibStub("AceAddon-3.0"):NewAddon("TSM_Auctioning_Options", "AceEvent-3.0", "AceHook-3.0")
+TSM.Options = Options
 local L = LibStub("AceLocale-3.0"):GetLocale("TradeSkillMaster_Auctioning") -- loads the localization table
 local AceGUI = LibStub("AceGUI-3.0") -- load the AceGUI libraries
 

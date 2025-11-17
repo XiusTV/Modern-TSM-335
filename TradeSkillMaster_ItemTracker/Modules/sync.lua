@@ -8,7 +8,8 @@
 
 -- load the parent file (TSM) into a local variable and register this file as a module
 local TSM = select(2, ...)
-local Sync = TSM:NewModule("Sync")
+local Sync = LibStub("AceAddon-3.0"):NewAddon("TSM_ItemTracker_Sync")
+TSM.Sync = Sync
 
 
 function Sync:BroadcastUpdateRequest(timerUp)
