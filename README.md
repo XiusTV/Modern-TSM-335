@@ -8,7 +8,7 @@
 
 Interact with me on discord @ https://discord.gg/neEqeFFUsE for help related to all my addons!
 
-# Modern TradeSkillMaster (WotLK 3.3.5)
+# Modern TradeSkillMaster (WotLK 3.3.5) **Work In Progress EXPECT Bugs**
 
 A refreshed presentation of TradeSkillMaster 2.x for Wrath of the Lich King realms. This fork keeps the classic module set intact while delivering a modern layout, richer dashboards, and streamlined navigation inspired by contemporary TSM releases.
 
